@@ -1,30 +1,12 @@
-import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/model/player.dart';
+import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
   late IO.Socket socket;
-
   String matchid = "";
 
-  // Initialize socket in the constructor
-  SocketService(
-      {required this.updateLoading,
-      required this.addAnswer,
-      required this.addWord,
-      required this.updatePlayers,
-      required this.hasLost,
-      required this.setFirst,
-      required this.addPoints,
-      required this.hasWon,
-      required this.addSentence,
-      required this.showAlert}) {
-    socket = IO.io("http://192.168.1.110:3000", <String, dynamic>{
-      "transports": ["websocket"],
-      "autoConnect": false,
-    });
-  }
   final Function updateLoading;
   final Function addAnswer;
   final Function addSentence;
@@ -32,82 +14,106 @@ class SocketService {
   final Function addWord;
   final Function setFirst;
   final Function hasWon;
+  final Function hasDraw;
   final Function addPoints;
   final Function hasLost;
   final Function showAlert;
 
+  static String SERVER_URL = gameServerIp;
+
+  SocketService({
+    required this.updateLoading,
+    required this.addAnswer,
+    required this.addWord,
+    required this.updatePlayers,
+    required this.hasLost,
+    required this.setFirst,
+    required this.addPoints,
+    required this.hasWon,
+    required this.hasDraw,
+    required this.addSentence,
+    required this.showAlert,
+  }) {
+    socket = IO.io(SERVER_URL, {
+      "transports": ["websocket"],
+      "autoConnect": false,
+    });
+  }
+
   void connect() {
     if (socket.connected) {
       print("Already connected!");
-      return; // Prevent reconnecting multiple times
+      return;
     }
 
     socket.connect();
+    socket.onConnect((_) => print("Connected to server"));
+    socket.onDisconnect((_) => print("Disconnected from server"));
+    socket.on("connect_error", (_) => print("Connection error, retrying..."));
 
-    socket.onConnect((_) {
-      print("Connected to server");
-    });
+    setupListeners();
+  }
 
-    // Remove previous listeners to avoid duplicates
+  void setupListeners() {
     socket.off("sessionUpdate");
     socket.off("matchFound/wordPuzzle");
     socket.off("matchFound/bombRelay");
     socket.off("receiveMessage");
-    socket.off("disconnect");
-    socket.off("sendMessage");
 
     socket.on("sessionUpdate", (data) {
-      print("Session Update: ${data['message']}");
-      if (data['message'].toString().split(" ")[2] == "disconnected.")
-        showAlert();
+      if (data.containsKey('message') && data['message'] is String) {
+        print("Session Update: ${data['message']}");
+        if (data['message'].split(" ").length > 2 &&
+            data['message'].split(" ")[2] == "disconnected.") {
+          showAlert();
+        }
+      }
     });
 
     socket.on("matchFound/wordPuzzle", (data) {
-      print(data["players"]);
       matchid = data["sessionId"];
       addWord(data["word"], data["definition"]);
-      List<Player> players = [];
-      for (int i = 0; i < data['players'].length; i++) {
-        players.add(Player(name: data['players'][i], points: 0));
-      }
-      updatePlayers(players);
+      updatePlayers(parsePlayers(data['players']));
       updateLoading();
     });
 
     socket.on("matchFound/bombRelay", (data) {
+      print(data['players']);
+
       matchid = data["sessionId"];
       addWord(data["word"], data["definition"]);
       setFirst(data["first"]);
-      List<Player> players = [];
-      for (int i = 0; i < data['players'].length; i++) {
-        players.add(Player(name: data['players'][i], points: 0));
-      }
-      updatePlayers(players);
+      updatePlayers(parsePlayers(data['players']));
       updateLoading();
     });
 
     socket.on("receiveMessage", (data) {
-      if (data['sender'] == preferences.getString("userName")) return;
-      print("Message Received from ${data['sender']}: ${data['message']}");
-      switch (data['action']) {
+      String? sender = data['sender'];
+      String? action = data['action'];
+      String? message = data['message'];
+
+      if (sender == preferences.getString("userName")) return;
+
+      print("Message Received from $sender: $message");
+
+      switch (action) {
         case "IWON":
           hasLost();
           break;
         case "ILOST":
-          hasLost();
+          hasWon();
+          break;
+        case "DRAW":
+          hasDraw();
           break;
         case "points":
-          addPoints(data["sender"], data["message"]);
+          addPoints(sender, message);
           break;
         case "answer_bombRelay":
-          addAnswer(data['message'].toString(), data['sender']);
+          addAnswer(message, sender);
           setFirst(true);
           break;
       }
-    });
-
-    socket.onDisconnect((_) {
-      print("Disconnected from server");
     });
   }
 
@@ -124,20 +130,48 @@ class SocketService {
   }
 
   void sendMessage(String sessionId, String message, String action) {
+    String? userName = preferences.getString("userName");
+    if (userName == null || userName.isEmpty) {
+      print("Error: UserName is null or empty.");
+      return;
+    }
+
     socket.emit("sendMessage", {
       "sessionId": sessionId,
-      "sender": preferences.getString("userName"),
+      "sender": userName,
       "action": action,
       "message": message
     });
   }
 
   void findMatch(String gameName) {
-    socket.emit(
-        "findMatch/$gameName", {"userName": preferences.getString("userName")});
+    String? userName = preferences.getString("userName");
+    int? userLevel = preferences.getInt("userLevel");
+    int? characterIndex = preferences.getInt("userCharacter");
+    int? hatIndex = preferences.getInt("userHat");
+
+    if (userName == null || userName.isEmpty) {
+      print("Error: UserName is null or empty.");
+      return;
+    }
+
+    socket.emit("findMatch/$gameName", {
+      "userName": userName,
+      'userLevel': userLevel,
+      "characterIndex": characterIndex,
+      "hatIndex": hatIndex
+    });
   }
 
   void disconnect() {
     socket.disconnect();
+  }
+
+  List<Player> parsePlayers(List<dynamic> playerNames) {
+    print(playerNames);
+    return playerNames
+        .map((name) => Player(
+            name: name, points: 0, characterIndex: 0, hatIndex: 0, level: 0))
+        .toList();
   }
 }

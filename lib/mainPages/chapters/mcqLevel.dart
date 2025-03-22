@@ -3,13 +3,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/level.dart';
+import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import '../model/Chapter.dart';
+import 'package:uuid/uuid.dart';
+import '../../model/Chapter.dart';
 
 class McqLevelPage extends StatefulWidget {
   final Chapter chapter;
@@ -41,6 +45,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
   int stars = 3;
   bool isSpeaking = false;
   bool started = false;
+  String description = "";
   late Timer timer;
   FlutterTts flutterTts = FlutterTts();
   // final ChapterController chapterController = Get.find();
@@ -48,6 +53,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
   @override
   void initState() {
     super.initState();
+    description = widget.level.description;
     options = getRandomWords(widget.words, widget.level.word);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // _showModalBottomSheet(context, "");
@@ -138,7 +144,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
                         .slideX(
                             begin: -0.3,
                             end: 0,
-                            curve: Curves.easeOut,
+                            curve: Curves.ease,
                             duration: 300.ms,
                             delay: 300.ms)
                         .fadeIn(),
@@ -231,17 +237,25 @@ class _McqLevelPageState extends State<McqLevelPage> {
                     ],
                   ),
                   SizedBox(
-                    height: 18.h,
+                    height: 12.h,
                   ),
                   Animate(
                     child: SizedBox(
                       width: 92.w,
-                      child: setText("${widget.level.description} 🤔",
-                          FontWeight.bold, 16.sp, fontColor, true),
+                      height: 16.h,
+                      child: setText(
+                          "$description 🤔",
+                          FontWeight.bold,
+                          16.sp,
+                          fontColor,
+                          true,
+                          description == widget.level.arabicDescription
+                              ? true
+                              : null),
                     ),
                   ).fadeIn(begin: 0, delay: 300.ms, duration: 500.ms),
                   SizedBox(
-                    height: 8.h,
+                    height: 2.h,
                   ),
                   SizedBox(
                     width: 85.w,
@@ -573,20 +587,52 @@ class _McqLevelPageState extends State<McqLevelPage> {
                     ),
                   ),
                   SizedBox(
-                    height: 15.h,
+                    height: 10.h,
                   ),
                   Container(
+                    width: 80.w,
+                    height: 7.h,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: fontColor.withOpacity(0.2))),
                     // width: 44.w,
                     // height: 6.5.h,
                     child: TextButton(
+                      style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16)))),
                       onPressed: () {
                         speak(widget.level.description);
                       },
-                      style: TextButton.styleFrom(padding: EdgeInsets.all(0)),
                       child: setText("Read sentence aloud", FontWeight.w600,
+                          15.sp, fontColor.withOpacity(0.5)),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  Container(
+                    width: 80.w,
+                    height: 7.h,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: fontColor.withOpacity(0.2))),
+                    // width: 44.w,
+                    // height: 6.5.h,
+                    child: TextButton(
+                      style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16)))),
+                      onPressed: () {
+                        setState(() {
+                          description = widget.level.arabicDescription;
+                        });
+                      },
+                      child: setText("Translate to Arabic", FontWeight.w600,
                           15.sp, fontColor.withOpacity(0.5)),
                     ),
                   ),
@@ -596,6 +642,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
     ));
   }
 
+  bool isSaved = false;
   void _showModalBottomSheet(BuildContext context) {
     showModalBottomSheet(
       isDismissible: false,
@@ -654,7 +701,11 @@ class _McqLevelPageState extends State<McqLevelPage> {
                             width: 1.5, color: primaryPurple.withOpacity(0.2)),
                       ),
                       child: IconButton(
-                          style: IconButton.styleFrom(padding: EdgeInsets.zero),
+                          style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16)))),
                           onPressed: () {
                             speak(widget.level.word);
                           },
@@ -683,9 +734,11 @@ class _McqLevelPageState extends State<McqLevelPage> {
                           //   ),
                           // );
                         },
-                        style: TextButton.styleFrom(
-                            backgroundColor: primaryPurple,
-                            padding: EdgeInsets.all(0)),
+                        style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            shape: const RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(16)))),
                         child:
                             setText("Ok", FontWeight.w600, 15.sp, Colors.white),
                       ),
@@ -699,12 +752,31 @@ class _McqLevelPageState extends State<McqLevelPage> {
                             width: 1.5, color: primaryPurple.withOpacity(0.2)),
                       ),
                       child: IconButton(
-                          style: IconButton.styleFrom(padding: EdgeInsets.zero),
-                          onPressed: () {},
-                          icon: Icon(
-                            FontAwesomeIcons.folderPlus,
-                            size: 6.w,
-                            color: primaryPurple,
+                          style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16)))),
+                          onPressed: () {
+                            if (isSaved) return;
+                            addLearnedWordsToDB(Learnedword(
+                                id: Uuid().v4(),
+                                word: widget.level.word,
+                                type: "meaning",
+                                description: widget.level.description));
+                            setState(() {
+                              isSaved == true;
+                            });
+                          },
+                          icon: AnimatedSwitcher(
+                            duration: Duration(milliseconds: 300),
+                            child: Icon(
+                              isSaved
+                                  ? FontAwesomeIcons.check
+                                  : FontAwesomeIcons.folderPlus,
+                              size: 6.w,
+                              color: primaryPurple,
+                            ),
                           )),
                     ),
                   ],
@@ -718,6 +790,8 @@ class _McqLevelPageState extends State<McqLevelPage> {
   }
 
   Future<void> answeredCorrectly() async {
+    final user = Provider.of<UserProgress>(context, listen: false);
+
     if (_width > 60.w) {
       stars -= 2;
     } else if (_width > 30.w) {
@@ -730,11 +804,11 @@ class _McqLevelPageState extends State<McqLevelPage> {
         description: chapters[widget.chapter.id - 1].description,
         levelCount: chapters[widget.chapter.id - 1].levelCount,
         pointsCollected: chapters[widget.chapter.id - 1].pointsCollected +
-            widget.level.points,
-        starsCollected:
-            chapters[widget.chapter.id - 1].starsCollected + stars < 1
-                ? 1
-                : stars,
+            ((widget.level.isReset == 0 && widget.level.isPassed == 0)
+                ? widget.level.points
+                : 0),
+        starsCollected: chapters[widget.chapter.id - 1].starsCollected +
+            (stars < 1 ? 1 : stars),
         levelsPassed: chapters[widget.chapter.id - 1].levelsPassed +
             (widget.level.isPassed == 0 ? 1 : 0),
         color: chapters[widget.chapter.id - 1].color);
@@ -745,6 +819,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
     McqLevel updatedLevel = McqLevel(
         chapterId: widget.level.chapterId,
         id: widget.level.id,
+        arabicDescription: widget.level.arabicDescription,
         levelType: widget.level.levelType,
         stars: stars < 1 ? 1 : stars,
         points: 30,
@@ -764,11 +839,10 @@ class _McqLevelPageState extends State<McqLevelPage> {
       mcqLevels;
     });
     if (preferences.getInt("userPoints") == null) {
-      preferences.setInt("userPoints", widget.level.points);
+      user.addXP(widget.level.points);
     } else {
       if (widget.level.isReset == 0 && widget.level.isPassed == 0) {
-        preferences.setInt("userPoints",
-            preferences.getInt("userPoints")! + widget.level.points);
+        user.addXP(widget.level.points);
       }
     }
     updateChapterInDB(updatedChapater);

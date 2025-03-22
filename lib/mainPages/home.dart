@@ -4,15 +4,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/avatar.dart';
 import 'package:funlish_app/mainPages/menu/account.dart';
 import 'package:funlish_app/mainPages/chapters/levelsMenu.dart';
 import 'package:funlish_app/mainPages/menu/leaderboard.dart';
 import 'package:funlish_app/mainPages/menu/stats.dart';
-import 'package:funlish_app/mainPages/serverTest.dart';
+import 'package:funlish_app/mainPages/shop.dart';
+import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/utility/noti_service.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 import '../model/Chapter.dart';
@@ -31,8 +34,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   String userName = "";
   double progress = 0;
   double bgOpacity = 0;
+  bool isViewingFlashCard = false;
   late AnimationController _animationController;
   ScrollController scrollController = ScrollController();
+
   ValueNotifier<int> activeIndex = ValueNotifier<int>(0);
 
   @override
@@ -100,6 +105,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProgress>(context);
+
     return Scaffold(
       backgroundColor: bodyColor,
       body: Container(
@@ -338,15 +345,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                       backgroundColor:
                                           fontColor.withOpacity(0.2),
                                       progressColor: primaryPurple,
-                                      percent: 0.2,
+                                      percent: user.xp / user.xpForNextLevel(),
                                       center: Column(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          Icon(
-                                            FontAwesomeIcons.one,
-                                            color: fontColor,
-                                          ),
+                                          setText(
+                                              user.level.toString(),
+                                              FontWeight.bold,
+                                              18.sp,
+                                              fontColor),
                                           setText("Level", FontWeight.w600,
                                               12.sp, fontColor.withOpacity(0.6))
                                         ],
@@ -373,11 +381,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         FontAwesomeIcons.coins,
                                         color: primaryPurple,
                                       ),
-                                      setText(
-                                          "${preferences.getInt("userPoints")}",
-                                          FontWeight.w600,
-                                          16.sp,
-                                          fontColor.withOpacity(1)),
+                                      setText("${user.points}", FontWeight.w600,
+                                          16.sp, fontColor.withOpacity(1)),
                                       setText("Points", FontWeight.w600, 12.sp,
                                           fontColor.withOpacity(0.6)),
                                     ],
@@ -496,17 +501,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Image.asset(
-                              'assets/images/avatar.png',
-                              width: 20.w,
-                            ),
+                            Avatar(
+                                characterIndex: user.characterIndex,
+                                hatIndex: user.hatIndex,
+                                width: 20.w),
                             SizedBox(
                               height: 1.h,
                             ),
                             setText(
                                 userName, FontWeight.w600, 16.sp, fontColor),
-                            setText("Level: 1", FontWeight.w600, 13.sp,
-                                fontColor.withOpacity(0.5)),
+                            setText("Level: ${user.level}", FontWeight.w600,
+                                13.sp, fontColor.withOpacity(0.5)),
                           ],
                         ),
                       ),
@@ -555,7 +560,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       NavButton("Schedule", Icons.date_range_rounded,
                           primaryPurple, () {}),
                       NavButton("Store", FontAwesomeIcons.store, primaryPurple,
-                          () {}),
+                          () {
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (BuildContext context) => Shop(),
+                          ),
+                        );
+                      }),
                       NavButton(
                           "Friends list", FontAwesomeIcons.users, primaryPurple,
                           () async {

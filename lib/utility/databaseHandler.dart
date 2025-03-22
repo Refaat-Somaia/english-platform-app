@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/level.dart';
 import 'package:funlish_app/utility/premadeData.dart';
 import 'package:sqflite/sqflite.dart';
@@ -40,12 +41,22 @@ CREATE TABLE mcqLevels (
     id TEXT PRIMARY KEY,
     chapterId INTEGER NOT NULL,
     description TEXT,
+    arabicDescription TEXT,
     levelType INTEGER,
     stars INTEGER,
     isReset INTEGER,
     word TEXT,
     isPassed INTEGER,
     points INTEGER
+    )
+''');
+
+        await db.execute('''
+CREATE TABLE learnedWords (
+    id TEXT PRIMARY KEY,
+    word TEXT,
+    type TEXT,
+    description TEXT
     )
 ''');
 
@@ -101,6 +112,7 @@ Future<void> insertMcqLevels(Database db) async {
         await db.query('mcqLevels');
 
     if (existingMcqLevels.isEmpty) {
+      predefinedMcqLevels.shuffle();
       for (var McqLevel in predefinedMcqLevels) {
         await db.insert(
           'mcqLevels',
@@ -109,6 +121,7 @@ Future<void> insertMcqLevels(Database db) async {
             'chapterId': McqLevel.chapterId,
             'description': McqLevel.description,
             'word': McqLevel.word,
+            'arabicDescription': McqLevel.arabicDescription,
             'levelType': McqLevel.levelType,
             'points': McqLevel.points,
             'isReset': McqLevel.isReset,
@@ -165,6 +178,36 @@ Future<List<Chapter>> getChaptersFromDB() async {
   });
 }
 
+Future<List<Learnedword>> getLearnedWordsFromDB() async {
+  if (database == null) {
+    throw Exception("Database is not initialized. Call openDB() first.");
+  }
+
+  final db = database;
+  final List<Map<String, dynamic>> maps = await db!.query('learnedWords');
+
+  return List.generate(maps.length, (i) {
+    return Learnedword(
+      id: maps[i]['id'],
+      word: maps[i]['word'],
+      description: maps[i]['description'],
+      type: maps[i]['type'],
+    );
+  });
+}
+
+Future<void> addLearnedWordsToDB(Learnedword learnedWord) async {
+  if (database == null) {
+    throw Exception("Database is not initialized. Call openDB() first.");
+  }
+
+  final db = database;
+  await db!.insert(
+      'learnedWords',
+      conflictAlgorithm: ConflictAlgorithm.replace,
+      learnedWord.toMap());
+}
+
 Future<void> updateChapterInDB(Chapter chapter) async {
   // Get a reference to the database.
   final db = await database;
@@ -177,6 +220,21 @@ Future<void> updateChapterInDB(Chapter chapter) async {
     where: 'id = ?',
     // Pass the Dog's id as a whereArg to prevent SQL injection.
     whereArgs: [chapter.id],
+  );
+}
+
+Future<void> updateLearedWordInDB(Learnedword learnedWord) async {
+  // Get a reference to the database.
+  final db = await database;
+
+  // Update the given Dog.
+  await db!.update(
+    'learnedWords',
+    learnedWord.toMap(),
+    // Ensure that the Dog has a matching id.
+    where: 'id = ?',
+    // Pass the Dog's id as a whereArg to prevent SQL injection.
+    whereArgs: [learnedWord.id],
   );
 }
 
@@ -203,13 +261,13 @@ Future<List<McqLevel>> getMcqLevelsOfChapter(int chapterId) async {
     where: 'chapterId = ?',
     whereArgs: [chapterId],
   );
-
-  return [
+  List<McqLevel> list = [
     for (final {
           'id': id as String,
           'word': word as String,
           'chapterId': chapterId as int,
           'description': description as String,
+          'arabicDescription': arabicDescription as String,
           'stars': stars as int,
           'levelType': levelType as int,
           'isPassed': isPassed as int,
@@ -222,12 +280,15 @@ Future<List<McqLevel>> getMcqLevelsOfChapter(int chapterId) async {
         levelType: levelType,
         description: description,
         isReset: isReset,
+        arabicDescription: arabicDescription,
         stars: stars,
         points: points,
         isPassed: isPassed,
         chapterId: chapterId,
       ),
   ];
+
+  return list;
 }
 
 Future<void> deleteDatabaseFile() async {

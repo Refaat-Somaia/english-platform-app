@@ -4,6 +4,7 @@ class McqLevel {
   final int levelType;
   final String description;
   final String word;
+  final String arabicDescription;
   final int isPassed;
   final int points;
   final int isReset;
@@ -15,6 +16,7 @@ class McqLevel {
       required this.chapterId,
       required this.description,
       required this.isReset,
+      required this.arabicDescription,
       required this.isPassed,
       required this.word,
       required this.stars,
@@ -25,8 +27,9 @@ class McqLevel {
       'id': id,
       'chapterId': chapterId,
       'description': description,
+      'arabicDescription': arabicDescription,
       'word': word,
-      'isReset':isReset,
+      'isReset': isReset,
       'levelType': levelType,
       'isPassed': isPassed,
       'points': points,

@@ -47,11 +47,18 @@ class _LeaderboardState extends State<Leaderboard> {
             ),
             Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               SizedBox(
-                height: 4.5.h,
+                height: 10.h,
               ),
-              setText("Leaderboard", FontWeight.w600, 17.sp, fontColor),
               SizedBox(
-                height: 4.h,
+                width: 90.w,
+                child: Row(
+                  children: [
+                    setText("Leaderboard", FontWeight.w600, 16.sp, fontColor),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 2.h,
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Container(
@@ -120,123 +127,130 @@ class _LeaderboardState extends State<Leaderboard> {
                 ),
                 SizedBox(height: 1.h),
                 SizedBox(
-                  width: 90.w,
-                  height: 35.h,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                  height: 72.h,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: 90.w,
+                          height: 35.h,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Image.asset(
-                                'assets/images/avatar.png',
-                                width: 10.w,
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/avatar.png',
+                                        width: 10.w,
+                                      ),
+                                      SizedBox(
+                                        height: 0.5.h,
+                                      ),
+                                      setText("userName", FontWeight.w600,
+                                          13.sp, fontColor.withOpacity(0.7)),
+                                    ],
+                                  ),
+                                  Container(
+                                    width: 15.w,
+                                    height: 15.h,
+                                    decoration: BoxDecoration(
+                                        color: primaryPurple,
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                  ),
+                                  SizedBox(
+                                    height: 0.5.h,
+                                  ),
+                                  setText("500 points", FontWeight.bold, 13.sp,
+                                      fontColor),
+                                ],
                               ),
-                              SizedBox(
-                                height: 0.5.h,
+                              SizedBox(width: 5.w),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/avatar.png',
+                                        width: 10.w,
+                                      ),
+                                      SizedBox(
+                                        height: 0.5.h,
+                                      ),
+                                      setText("userName", FontWeight.w600,
+                                          13.sp, fontColor.withOpacity(0.7)),
+                                    ],
+                                  ),
+                                  Container(
+                                    width: 15.w,
+                                    height: 20.h,
+                                    decoration: BoxDecoration(
+                                        color: primaryBlue,
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                  ),
+                                  SizedBox(
+                                    height: 0.5.h,
+                                  ),
+                                  setText("500 points", FontWeight.bold, 13.sp,
+                                      fontColor),
+                                ],
                               ),
-                              setText("userName", FontWeight.w600, 13.sp,
-                                  fontColor.withOpacity(0.7)),
+                              SizedBox(width: 5.w),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/avatar.png',
+                                        width: 10.w,
+                                      ),
+                                      SizedBox(
+                                        height: 0.5.h,
+                                      ),
+                                      setText("userName", FontWeight.w600,
+                                          13.sp, fontColor.withOpacity(0.7)),
+                                    ],
+                                  ),
+                                  Container(
+                                    width: 15.w,
+                                    height: 10.h,
+                                    decoration: BoxDecoration(
+                                        color: primaryPurple,
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                  ),
+                                  SizedBox(
+                                    height: 0.5.h,
+                                  ),
+                                  setText("500 points", FontWeight.bold, 13.sp,
+                                      fontColor),
+                                ],
+                              ),
                             ],
                           ),
-                          Container(
-                            width: 15.w,
-                            height: 15.h,
-                            decoration: BoxDecoration(
-                                color: primaryPurple,
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          SizedBox(
-                            height: 0.5.h,
-                          ),
-                          setText(
-                              "500 points", FontWeight.bold, 13.sp, fontColor),
-                        ],
-                      ),
-                      SizedBox(width: 5.w),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/avatar.png',
-                                width: 10.w,
-                              ),
-                              SizedBox(
-                                height: 0.5.h,
-                              ),
-                              setText("userName", FontWeight.w600, 13.sp,
-                                  fontColor.withOpacity(0.7)),
-                            ],
-                          ),
-                          Container(
-                            width: 15.w,
-                            height: 20.h,
-                            decoration: BoxDecoration(
-                                color: primaryBlue,
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          SizedBox(
-                            height: 0.5.h,
-                          ),
-                          setText(
-                              "500 points", FontWeight.bold, 13.sp, fontColor),
-                        ],
-                      ),
-                      SizedBox(width: 5.w),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/avatar.png',
-                                width: 10.w,
-                              ),
-                              SizedBox(
-                                height: 0.5.h,
-                              ),
-                              setText("userName", FontWeight.w600, 13.sp,
-                                  fontColor.withOpacity(0.7)),
-                            ],
-                          ),
-                          Container(
-                            width: 15.w,
-                            height: 10.h,
-                            decoration: BoxDecoration(
-                                color: primaryPurple,
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          SizedBox(
-                            height: 0.5.h,
-                          ),
-                          setText(
-                              "500 points", FontWeight.bold, 13.sp, fontColor),
-                        ],
-                      ),
-                    ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Userpointscontainer(),
+                        Userpointscontainer(),
+                        Userpointscontainer(),
+                        Userpointscontainer(),
+                      ],
+                    ),
                   ),
                 ),
-                SizedBox(height: 4.h),
-                SizedBox(
-                    height: 36.h,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          Userpointscontainer(),
-                          Userpointscontainer(),
-                          Userpointscontainer(),
-                          Userpointscontainer(),
-                        ],
-                      ),
-                    )),
               ])
             ])
           ])),

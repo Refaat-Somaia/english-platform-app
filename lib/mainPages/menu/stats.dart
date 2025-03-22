@@ -1,7 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/mainPages/menu/stats/learnedWordsPage.dart';
+import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/utility/custom_icons_icons.dart';
+import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:sizer/sizer.dart';
 
@@ -13,6 +17,32 @@ class Stats extends StatefulWidget {
 }
 
 class _StatsState extends State<Stats> {
+  List<Learnedword> words = [];
+  List<Learnedword> listenWords = [];
+
+  List<Learnedword> diffWords = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getWords();
+    });
+  }
+
+  void getWords() async {
+    words = await getLearnedWordsFromDB();
+    for (var word in words) {
+      if (word.type == "listen") {
+        listenWords.add(word);
+      } else {
+        diffWords.add(word);
+      }
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,10 +110,20 @@ class _StatsState extends State<Stats> {
                         children: [
                           Column(
                             children: [
-                              buttonOfMenu(primaryPurple, "By meaning",
-                                  FontAwesomeIcons.file, 500.ms, 0),
-                              buttonOfMenu(primaryBlue, "By listening",
-                                  Icons.headphones_rounded, 600.ms, 1),
+                              buttonOfMenu(
+                                  primaryPurple,
+                                  "By meaning",
+                                  FontAwesomeIcons.file,
+                                  500.ms,
+                                  0,
+                                  diffWords.length),
+                              buttonOfMenu(
+                                  primaryBlue,
+                                  "By listening",
+                                  Icons.headphones_rounded,
+                                  600.ms,
+                                  1,
+                                  listenWords.length),
                               buttonOfMenu(primaryPurple, "Threads",
                                   FontAwesomeIcons.podcast, 700.ms, 2),
                               SizedBox(
@@ -96,7 +136,7 @@ class _StatsState extends State<Stats> {
                               buttonOfMenu(primaryBlue, "Daily challenges",
                                   Icons.schedule, 700.ms, 3),
                               buttonOfMenu(primaryPurple, "My level",
-                                  FontAwesomeIcons.one, 900.ms, 4),
+                                  FontAwesomeIcons.barsProgress, 900.ms, 4),
 
                               // SizedBox(
                               //   height: 20.h,
@@ -116,7 +156,7 @@ class _StatsState extends State<Stats> {
     );
   }
 
-  Widget buttonOfMenu(Color color, text, icon, duration, [index]) {
+  Widget buttonOfMenu(Color color, text, icon, duration, [index, count]) {
     return Animate(
       child: Container(
         margin: EdgeInsets.only(bottom: 2.h),
@@ -134,8 +174,24 @@ class _StatsState extends State<Stats> {
           onPressed: () {
             switch (index) {
               case 0:
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                      builder: (BuildContext context) => Learnedwordspage(
+                            type: "meaning",
+                            words: diffWords,
+                          )),
+                );
                 break;
               case 1:
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                      builder: (BuildContext context) => Learnedwordspage(
+                            type: "listening",
+                            words: listenWords,
+                          )),
+                );
                 break;
               case 2:
                 break;
@@ -172,8 +228,8 @@ class _StatsState extends State<Stats> {
                     fit: BoxFit.scaleDown,
                     child: setText(text, FontWeight.w600, 15.sp, fontColor)),
               ),
-              setText(
-                  "2 words", FontWeight.w600, 13.sp, fontColor.withOpacity(0.5))
+              setText("${count ?? "2"} words", FontWeight.w600, 13.sp,
+                  fontColor.withOpacity(0.5))
             ],
           ),
         ),

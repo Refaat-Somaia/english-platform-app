@@ -14,9 +14,13 @@ class _UserpointscontainerState extends State<Userpointscontainer> {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(bottom: 2.h),
+      padding: EdgeInsets.symmetric(horizontal: 10),
       width: 92.w,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: primaryPurple.withOpacity(0.08)),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
             width: 8.w,
@@ -24,18 +28,18 @@ class _UserpointscontainerState extends State<Userpointscontainer> {
             decoration:
                 BoxDecoration(shape: BoxShape.circle, color: primaryPurple),
             child: Center(
-              child: setText("1", FontWeight.bold, 14.sp, bodyColor),
+              child: setText("1", FontWeight.bold, 13.sp, bodyColor),
             ),
           ),
+          SizedBox(
+            width: 3.w,
+          ),
           Container(
-            width: 82.w,
+            // width: 75.w,
             height: 10.h,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: primaryPurple.withOpacity(0.08)),
             child: Center(
               child: SizedBox(
-                width: 76.w,
+                width: 70.w,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

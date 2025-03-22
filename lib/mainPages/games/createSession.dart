@@ -24,6 +24,7 @@ class _CreatesessionState extends State<Createsession> {
       socketService = SocketService(
           updateLoading: () {},
           addAnswer: () {},
+          hasDraw: () {},
           hasWon: () {},
           addPoints: () {},
           updatePlayers: () {},

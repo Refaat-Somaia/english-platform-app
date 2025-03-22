@@ -8,7 +8,9 @@ import '../utility/global.dart';
 
 class Interests extends StatefulWidget {
   final List<String> userInterests;
-  const Interests({super.key, required this.userInterests});
+  final Function addInterest;
+  const Interests(
+      {super.key, required this.userInterests, required this.addInterest});
 
   @override
   State<Interests> createState() => _InterestsState();
@@ -124,7 +126,7 @@ class _InterestsState extends State<Interests> {
                         var item = interestItems[index];
                         return InterestCard(
                           title: item['title'],
-                          userInterests: widget.userInterests,
+                          addInterest: widget.addInterest,
                           icon: item['icon'],
                           index: item['index'],
                         );

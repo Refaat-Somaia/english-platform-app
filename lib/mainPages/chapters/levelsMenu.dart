@@ -2,12 +2,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:funlish_app/mainPages/mcqLevel.dart';
+import 'package:funlish_app/mainPages/chapters/listeningLevel.dart';
+import 'package:funlish_app/mainPages/chapters/mcqLevel.dart';
 import 'package:funlish_app/model/level.dart';
+import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../model/Chapter.dart';
@@ -293,75 +296,94 @@ class _LevelsMenuState extends State<LevelsMenu> {
                                     onTap: () {
                                       if (!isCompleted) return;
 
-                                      // Navigator.push(
-                                      //   context,
-                                      //   CupertinoPageRoute(
-                                      //       builder: (context) => McqLevelPage(
-                                      //             words: words,
-                                      //             icons: icons,
-                                      //             updateChapters:
-                                      //                 updateChpaters,
-                                      //             updateLevels: updateMcqLevels,
-                                      //             chapter: chapters[
-                                      //                 widget.chapter.id - 1],
-                                      //             level: McqLevel(
-                                      //                 id: mcqLevels[index].id,
-                                      //                 isPassed: mcqLevels[index]
-                                      //                     .isPassed,
-                                      //                 stars: mcqLevels[index]
-                                      //                     .stars,
-                                      //                 chapterId:
-                                      //                     chapters[
-                                      //                             widget.chapter
-                                      //                                     .id -
-                                      //                                 1]
-                                      //                         .id,
-                                      //                 description:
-                                      //                     mcqLevels[index]
-                                      //                         .description,
-                                      //                 word:
-                                      //                     mcqLevels[index].word,
-                                      //                 points: mcqLevels[index]
-                                      //                     .points),
-                                      //           )),
-                                      // );
                                       Navigator.push(
                                         context,
                                         CupertinoPageRoute(
                                             builder: (BuildContext context) =>
-                                                McqLevelPage(
-                                                  words: words,
-                                                  icons: icons,
-                                                  updateChapters:
-                                                      updateChpaters,
-                                                  updateLevels: updateMcqLevels,
-                                                  chapter: chapters[
-                                                      widget.chapter.id - 1],
-                                                  level: McqLevel(
-                                                      id: mcqLevels[index].id,
-                                                      isPassed: mcqLevels[index]
-                                                          .isPassed,
-                                                      isReset: mcqLevels[index]
-                                                          .isReset,
-                                                      stars: mcqLevels[index]
-                                                          .stars,
-                                                      levelType:
-                                                          mcqLevels[index]
-                                                              .levelType,
-                                                      chapterId:
-                                                          chapters[
-                                                                  widget.chapter
-                                                                          .id -
-                                                                      1]
-                                                              .id,
-                                                      description:
-                                                          mcqLevels[index]
-                                                              .description,
-                                                      word:
-                                                          mcqLevels[index].word,
-                                                      points: mcqLevels[index]
-                                                          .points),
-                                                )),
+                                                (index % 5 == 0 &&
+                                                        mcqLevels[index]
+                                                                .levelType !=
+                                                            2)
+                                                    ? Listeninglevel(
+                                                        words: words,
+                                                        icons: icons,
+                                                        updateChapters:
+                                                            updateChpaters,
+                                                        updateLevels:
+                                                            updateMcqLevels,
+                                                        chapter: chapters[
+                                                            widget.chapter.id -
+                                                                1],
+                                                        level: McqLevel(
+                                                            id: mcqLevels[index]
+                                                                .id,
+                                                            isPassed:
+                                                                mcqLevels[index]
+                                                                    .isPassed,
+                                                            arabicDescription:
+                                                                mcqLevels[index]
+                                                                    .arabicDescription,
+                                                            isReset: mcqLevels[index]
+                                                                .isReset,
+                                                            stars: mcqLevels[index]
+                                                                .stars,
+                                                            levelType:
+                                                                mcqLevels[index]
+                                                                    .levelType,
+                                                            chapterId: chapters[
+                                                                    widget.chapter.id -
+                                                                        1]
+                                                                .id,
+                                                            description:
+                                                                mcqLevels[index]
+                                                                    .description,
+                                                            word:
+                                                                mcqLevels[index]
+                                                                    .word,
+                                                            points:
+                                                                mcqLevels[index]
+                                                                    .points),
+                                                      )
+                                                    : McqLevelPage(
+                                                        words: words,
+                                                        icons: icons,
+                                                        updateChapters:
+                                                            updateChpaters,
+                                                        updateLevels:
+                                                            updateMcqLevels,
+                                                        chapter: chapters[
+                                                            widget.chapter.id -
+                                                                1],
+                                                        level: McqLevel(
+                                                            id: mcqLevels[index]
+                                                                .id,
+                                                            isPassed:
+                                                                mcqLevels[index]
+                                                                    .isPassed,
+                                                            arabicDescription:
+                                                                mcqLevels[index]
+                                                                    .arabicDescription,
+                                                            isReset: mcqLevels[index]
+                                                                .isReset,
+                                                            stars: mcqLevels[index]
+                                                                .stars,
+                                                            levelType:
+                                                                mcqLevels[index]
+                                                                    .levelType,
+                                                            chapterId: chapters[
+                                                                    widget.chapter.id -
+                                                                        1]
+                                                                .id,
+                                                            description:
+                                                                mcqLevels[index]
+                                                                    .description,
+                                                            word:
+                                                                mcqLevels[index]
+                                                                    .word,
+                                                            points:
+                                                                mcqLevels[index]
+                                                                    .points),
+                                                      )),
                                       );
                                     },
                                     child: Row(
@@ -660,7 +682,7 @@ class _LevelsMenuState extends State<LevelsMenu> {
                             name: widget.chapter.name,
                             description: widget.chapter.description,
                             levelCount: widget.chapter.levelCount,
-                            pointsCollected: 0,
+                            pointsCollected: widget.chapter.pointsCollected,
                             starsCollected: 0,
                             levelsPassed: 0,
                             color: widget.chapter.color);
@@ -672,6 +694,8 @@ class _LevelsMenuState extends State<LevelsMenu> {
                                 levelType: mcqLevels[i].levelType,
                                 chapterId: mcqLevels[i].chapterId,
                                 description: mcqLevels[i].description,
+                                arabicDescription:
+                                    mcqLevels[i].arabicDescription,
                                 isPassed: 0,
                                 isReset: mcqLevels[i].isPassed == 1 ? 1 : 0,
                                 word: mcqLevels[i].word,
@@ -685,6 +709,8 @@ class _LevelsMenuState extends State<LevelsMenu> {
                                 id: mcqLevels[i].id,
                                 chapterId: mcqLevels[i].chapterId,
                                 description: mcqLevels[i].description,
+                                arabicDescription:
+                                    mcqLevels[i].arabicDescription,
                                 isPassed: 0,
                                 levelType: mcqLevels[i].levelType,
                                 word: mcqLevels[i].word,

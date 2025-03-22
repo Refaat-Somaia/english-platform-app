@@ -133,8 +133,10 @@ class _InputlevelState extends State<Inputlevel>
             return;
           }
           setState(() {
-            isDraw = true;
+            isLost = true;
           });
+            socketService.sendMessage(socketService.matchid, "", "ILOST");
+
         }
       }
     });
@@ -165,12 +167,23 @@ class _InputlevelState extends State<Inputlevel>
       isFirst = isFirst1;
       timer.cancel();
     });
+    if (words.length == currentQuestion) {
+      socketService.sendMessage(socketService.matchid, "", "DRAW");
+      hasDraw();
+    }
     if (!isCountDown && isFirst) startTimer();
   }
 
   void hasWon() {
     setState(() {
       isWon = true;
+      timer.cancel();
+    });
+  }
+
+  void hasDraw() {
+    setState(() {
+      isDraw = true;
       timer.cancel();
     });
   }
@@ -190,6 +203,7 @@ class _InputlevelState extends State<Inputlevel>
           updatePlayers: updatePlayers,
           addPoints: addPoints,
           addSentence: () {},
+          hasDraw: hasDraw,
           hasLost: hasLost,
           hasWon: hasWon,
           addWord: addWord,
@@ -466,6 +480,8 @@ class _InputlevelState extends State<Inputlevel>
                                                                               12)))),
                                                                   onPressed:
                                                                       () {
+                                                                    timer
+                                                                        .cancel();
                                                                     if (words[
                                                                             currentQuestion] ==
                                                                         inputController

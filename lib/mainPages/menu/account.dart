@@ -2,11 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/avatar.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/components/modals/passwordModal.dart';
 import 'package:funlish_app/components/modals/successModal.dart';
+import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/screens/splash.dart';
 import 'package:funlish_app/utility/global.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 class Account extends StatefulWidget {
@@ -51,6 +54,8 @@ class _AccountState extends State<Account> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProgress>(context);
+
     return Scaffold(
       backgroundColor: bodyColor,
       body: SizedBox(
@@ -89,23 +94,23 @@ class _AccountState extends State<Account> {
                   SizedBox(
                     height: 4.5.h,
                   ),
-                  setText("My account", FontWeight.w600, 18.sp, fontColor),
+                  setText("My account", FontWeight.w600, 17.sp, fontColor),
                   SizedBox(
                     height: 6.h,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/images/avatar.png',
-                        width: 20.w,
-                      ),
+                      Avatar(
+                          characterIndex: user.characterIndex,
+                          hatIndex: user.hatIndex,
+                          width: 20.w),
                       SizedBox(
                         height: 1.h,
                       ),
                       setText(nameController.text, FontWeight.w600, 16.sp,
                           fontColor),
-                      setText("Level: 1", FontWeight.w600, 13.sp,
+                      setText("Level: ${user.level}", FontWeight.w600, 13.sp,
                           fontColor.withOpacity(0.5)),
                     ],
                   ),

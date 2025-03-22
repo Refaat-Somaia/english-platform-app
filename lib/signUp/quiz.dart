@@ -4,14 +4,14 @@ import 'package:sizer/sizer.dart';
 
 import '../utility/global.dart';
 
-class QuizPage extends StatefulWidget {
-  const QuizPage({super.key});
+class Quiz extends StatefulWidget {
+  const Quiz({super.key});
 
   @override
-  State<QuizPage> createState() => _QuizPageState();
+  State<Quiz> createState() => _QuizState();
 }
 
-class _QuizPageState extends State<QuizPage> {
+class _QuizState extends State<Quiz> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,10 +54,10 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               )
                   .slideX(
-                      begin: -0.3,
+                      begin: -0.2,
                       end: 0,
-                      curve: Curves.easeOut,
-                      duration: 300.ms,
+                      curve: Curves.ease,
+                      duration: 400.ms,
                       delay: 300.ms)
                   .fadeIn(),
             ])));

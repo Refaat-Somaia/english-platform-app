@@ -1,16 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:funlish_app/body.dart';
+
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/signUp/gender.dart';
 import 'package:funlish_app/signUp/interests.dart';
 import 'package:funlish_app/signUp/quiz.dart';
+import 'package:funlish_app/signUp/quizPage.dart';
 import 'package:sizer/sizer.dart';
 
 import '../utility/global.dart';
-import 'login.dart';
 
 class AfterSignUp extends StatefulWidget {
   const AfterSignUp({super.key});
@@ -35,10 +33,18 @@ class _AfterSignUpState extends State<AfterSignUp> {
         Gender(gender: gender),
         Interests(
           userInterests: userInterests,
+          addInterest: addInterest,
         ),
-        QuizPage()
+        Quiz()
       ];
     });
+  }
+
+  void addInterest(String interest) {
+    setState(() {
+      userInterests.add(interest);
+    });
+    print(userInterests);
   }
 
   @override
@@ -158,13 +164,21 @@ class _AfterSignUpState extends State<AfterSignUp> {
                                   duration: Duration(milliseconds: 400),
                                   curve: Curves.easeInOut);
                             } else {
-                              Navigator.pushAndRemoveUntil(
+                              // Navigator.pushAndRemoveUntil(
+                              //   context,
+                              //   CupertinoPageRoute(
+                              //     builder: (BuildContext context) =>
+                              //         const Body(),
+                              //   ),
+                              //   (route) => false,
+                              // );
+                              Navigator.push(
                                 context,
                                 CupertinoPageRoute(
-                                  builder: (BuildContext context) =>
-                                      const Body(),
+                                  builder: (BuildContext context) => Quizpage(
+                                    userInterests: userInterests,
+                                  ),
                                 ),
-                                (route) => false,
                               );
                             }
                           },

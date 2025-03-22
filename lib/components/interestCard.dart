@@ -6,15 +6,14 @@ import '../utility/global.dart';
 
 class InterestCard extends StatefulWidget {
   final String title;
-  final List<String> userInterests;
-
+  final Function addInterest;
   final IconData icon;
   final int index;
 
   const InterestCard({
     Key? key,
-    required this.userInterests,
     required this.title,
+    required this.addInterest,
     required this.icon,
     required this.index,
   }) : super(key: key);
@@ -33,13 +32,15 @@ class _InterestCardState extends State<InterestCard> {
         onTap: () {
           !isPressed
               ? setState(() {
-                  widget.userInterests.add(widget.title);
+                  widget.addInterest(widget.title);
                   isPressed = true;
                 })
               : setState(() {
                   isPressed = false;
-                  widget.userInterests.remove(widget.title);
                 });
+
+          //     widget.userInterests.remove(widget.title);
+          //   });
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),

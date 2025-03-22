@@ -9,6 +9,8 @@ const Color primaryPurple = Color(0xff9E75FF);
 const Color primaryBlue = Color(0xff4A85FC);
 const Color bodyColor = Color(0xffF9F7FF);
 const Color fontColor = Color(0xff32356D);
+String serverIp = 'http://192.168.1.110:8055';
+String gameServerIp = "http://192.168.1.110:3000";
 const List<Color> colors = [
   Color.fromARGB(255, 48, 212, 234),
   Color(0xffFFCC70),
@@ -22,17 +24,18 @@ List<Chapter> chapters = [];
 List<McqLevel> mcqLevels = [];
 late SharedPreferences preferences;
 Text setText(String text, FontWeight weight, double size, Color color,
-    [isCenterd, isUnderLined]) {
+    [isCenterd, isRtl]) {
   return Text(
     text,
     style: TextStyle(
-        fontFamilyFallback: ['magnet', 'Twemoji'],
+        fontFamilyFallback: ['magnet', 'janna'],
         decorationStyle: TextDecorationStyle.solid,
         decorationColor: primaryPurple,
         decorationThickness: 2,
         fontSize: size,
         fontWeight: weight,
         color: color),
+    textDirection: isRtl != null ? TextDirection.rtl : TextDirection.ltr,
     textAlign: isCenterd != null ? TextAlign.center : TextAlign.start,
   );
 }
@@ -232,6 +235,7 @@ Map<String, IconData> healthcareWordsIcons = {
   "Surgery": FontAwesomeIcons.handHoldingMedical,
   "Vaccine": FontAwesomeIcons.syringe,
   "Emergency Room": FontAwesomeIcons.procedures,
+  "Pill": FontAwesomeIcons.pills,
   "Stethoscope": FontAwesomeIcons.stethoscope,
   "Medical Checkup": FontAwesomeIcons.notesMedical,
   "First Aid": FontAwesomeIcons.briefcaseMedical,
@@ -298,21 +302,21 @@ Map<String, Map<String, IconData>> chapterIcons = {
 };
 
 List<String> getRandomWords(List<String> houseWords, String levelWord) {
-  List<String> allWords = houseWords;
+  List<String> allWords = List.from(
+      houseWords); // Create a copy to avoid modifying the original list
 
-  // if (!allWords.contains(levelWord)) {
-  //   throw ArgumentError("$levelWord is not present in the $allWords map.");
-  // }
+  allWords.remove(
+      levelWord); // Ensure levelWord is not included in the random selection
 
-  allWords.remove(levelWord);
+  allWords.shuffle(Random()); // Shuffle before taking words
 
-  allWords.shuffle(Random());
+  List<String> randomWords =
+      allWords.take(3).toSet().toList(); // Convert to Set to ensure uniqueness
 
-  List<String> randomWords = allWords.take(3).toList();
+  randomWords.add(levelWord); // Add the levelWord
 
-  randomWords.add(levelWord);
-
-  randomWords.shuffle(Random());
+  randomWords.shuffle(
+      Random()); // Shuffle again to randomize the position of levelWord
 
   return randomWords;
 }

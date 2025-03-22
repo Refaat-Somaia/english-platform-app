@@ -162,6 +162,7 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         addAnswer: () {},
         setFirst: () {},
         hasWon: () {},
+        hasDraw: () {},
         addWord: addWord,
         updatePlayers: updatePlayers,
         hasLost: hasLost,

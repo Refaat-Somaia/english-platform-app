@@ -57,6 +57,10 @@ dependencies:
   android_alarm_manager_plus: ^4.0.7
   permission_handler: ^11.4.0
   socket_io_client: ^3.0.2
+  internet_connection_checker_plus: ^2.7.1
+  http: ^1.3.0
+  flash_card: ^0.1.0
+  provider: ^6.1.2
   # languagetool_textfield: ^0.1.1
 
 dev_dependencies:
@@ -84,6 +88,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/images/shop/characters/
+    - assets/images/shop/hats/
     - assets/images/house/
     - assets/images/traveling/
     - assets/images/healthcare/
@@ -118,6 +124,9 @@ flutter:
     - family: Twemoji
       fonts:
         - asset: assets/fonts/twemoji.ttf
+    - family: janna
+      fonts:
+        - asset: assets/fonts/Janna LT Bold.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #

@@ -1,3 +1,4 @@
+import 'package:dart_ping/dart_ping.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -5,7 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/screens/login.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+
 import 'package:sizer/sizer.dart';
 
 import '../screens/afterSignUp.dart';
@@ -139,7 +141,7 @@ class _SignupState extends State<Signup> {
                             fontWeight: FontWeight.w500,
                             color: fontColor.withOpacity(0.3),
                           ),
-                          hintText: "Enter",
+                          hintText: "Email",
                           prefixIcon: Icon(
                             Icons.email,
                             size: 6.w,
@@ -341,12 +343,7 @@ class _SignupState extends State<Signup> {
                           showAlertModal(context, "Passwords don't match");
                           return;
                         }
-                        signUserUp();
-                        Navigator.pushReplacement(
-                          context,
-                          CupertinoPageRoute(
-                              builder: (context) => const AfterSignUp()),
-                        );
+                        saveSignUpInfo();
                       },
                       style: TextButton.styleFrom(
                           backgroundColor: primaryPurple,
@@ -383,10 +380,13 @@ class _SignupState extends State<Signup> {
     );
   }
 
-  void signUserUp() async {
-    preferences.setBool("isLoggedIn", true);
-    preferences.setString("userName", nameController.text);
-    preferences.setString("userEmail", emailController.text);
+  void saveSignUpInfo() async {
+    preferences.setString("userName", nameController.text.trim());
+    preferences.setString("userEmail", emailController.text.trim());
     preferences.setString("userPassword", passwordController.text);
+    Navigator.push(
+      context,
+      CupertinoPageRoute(builder: (context) => const AfterSignUp()),
+    );
   }
 }
