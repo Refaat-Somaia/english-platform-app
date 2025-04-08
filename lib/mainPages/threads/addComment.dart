@@ -130,11 +130,15 @@ class _AddcommentState extends State<Addcomment> {
                   width: 90.w,
                   height: 20.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: preferences.getBool("isDarkMode") == true
+                        ? Color.fromARGB(255, 54, 35, 97)
+                        : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color.fromARGB(255, 241, 241, 241),
+                        color: preferences.getBool("isDarkMode") == true
+                            ? Color.fromARGB(255, 0, 0, 0)
+                            : const Color.fromARGB(255, 241, 241, 241),
                         spreadRadius: 0.01.h,
                         blurRadius: 8,
                         offset: const Offset(0, 7),

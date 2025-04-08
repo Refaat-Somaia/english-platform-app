@@ -17,6 +17,8 @@ class SocketService {
   final Function hasDraw;
   final Function addPoints;
   final Function hasLost;
+  final Function friednlyBomb;
+  final Function extendTimer;
   final Function showAlert;
 
   static String SERVER_URL = gameServerIp;
@@ -24,7 +26,9 @@ class SocketService {
   SocketService({
     required this.updateLoading,
     required this.addAnswer,
+    required this.friednlyBomb,
     required this.addWord,
+    required this.extendTimer,
     required this.updatePlayers,
     required this.hasLost,
     required this.setFirst,
@@ -77,9 +81,15 @@ class SocketService {
       updateLoading();
     });
 
-    socket.on("matchFound/bombRelay", (data) {
-      print(data['players']);
+    socket.on("matchFound/castleEscape", (data) {
+      print(data["word"] + data["definition"]);
+      matchid = data["sessionId"];
+      addWord(data["word"], data["definition"], data["options"]);
+      updatePlayers(parsePlayers(data['players']));
+      updateLoading();
+    });
 
+    socket.on("matchFound/bombRelay", (data) {
       matchid = data["sessionId"];
       addWord(data["word"], data["definition"]);
       setFirst(data["first"]);
@@ -112,6 +122,14 @@ class SocketService {
         case "answer_bombRelay":
           addAnswer(message, sender);
           setFirst(true);
+          break;
+        case "EXTENDTIMER":
+          extendTimer(sender);
+          break;
+        case "FRIENDLYBOMB":
+          friednlyBomb(sender);
+          break;
+        default:
           break;
       }
     });
@@ -146,9 +164,9 @@ class SocketService {
 
   void findMatch(String gameName) {
     String? userName = preferences.getString("userName");
-    int? userLevel = preferences.getInt("userLevel");
-    int? characterIndex = preferences.getInt("userCharacter");
-    int? hatIndex = preferences.getInt("userHat");
+    int? userLevel = preferences.getInt("userLevel") ?? 1;
+    int? characterIndex = preferences.getInt("userCharacter") ?? 0;
+    int? hatIndex = preferences.getInt("userHat") ?? 0;
 
     if (userName == null || userName.isEmpty) {
       print("Error: UserName is null or empty.");
@@ -167,11 +185,16 @@ class SocketService {
     socket.disconnect();
   }
 
-  List<Player> parsePlayers(List<dynamic> playerNames) {
-    print(playerNames);
-    return playerNames
-        .map((name) => Player(
-            name: name, points: 0, characterIndex: 0, hatIndex: 0, level: 0))
-        .toList();
+  List<Player> parsePlayers(List<dynamic> playerData) {
+    print(playerData); // Debugging print
+    return playerData.map((data) {
+      return Player(
+        name: data['userName'], // Extract name
+        points: 0, // Default value
+        characterIndex: data['characterIndex'] ?? 0, // Use default if missing
+        hatIndex: data['hatIndex'] ?? 0, // Use default if missing
+        level: data['userLevel'] ?? 0, // Use default if missing
+      );
+    }).toList();
   }
 }

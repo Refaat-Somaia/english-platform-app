@@ -38,7 +38,7 @@ class McqLevelPage extends StatefulWidget {
 
 class _McqLevelPageState extends State<McqLevelPage> {
   @override
-  List<String> options = [];
+  List<String> options = ["", "", "", ""];
   List<bool> isPressed = [false, false, false, false];
   String answered = "";
   double _width = 0;
@@ -54,10 +54,23 @@ class _McqLevelPageState extends State<McqLevelPage> {
   void initState() {
     super.initState();
     description = widget.level.description;
+    // if(widget.chapter.name.toLowerCase()=="grammar"){
+    //   options=ge
+    // }
     options = getRandomWords(widget.words, widget.level.word);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // _showModalBottomSheet(context, "");
+      initTTS();
     });
+  }
+
+  Future<void> initTTS() async {
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.setVolume(1.0);
+    await flutterTts.setPitch(1.0);
+
+    await flutterTts.awaitSpeakCompletion(true);
 
     try {
       flutterTts.setStartHandler(() {
@@ -72,8 +85,29 @@ class _McqLevelPageState extends State<McqLevelPage> {
         print('TTS Error: $msg');
         setState(() => isSpeaking = false);
       });
+
+      print("TTS Engine Initialized Successfully!");
     } catch (e) {
       print('TTS Initialization Error: $e');
+    }
+  }
+
+  Future<void> speak(String text) async {
+    if (isSpeaking) return;
+
+    int engineAvailable = await flutterTts.isLanguageAvailable("en-US") ? 1 : 0;
+    if (engineAvailable == 0) {
+      print("TTS Engine is not ready yet!");
+      await initTTS(); // Re-initialize if needed
+      return;
+    }
+
+    String processedText = text.replaceAll('_', ' ');
+
+    try {
+      await flutterTts.speak(processedText);
+    } catch (e) {
+      print('TTS Speak Error: $e');
     }
   }
 
@@ -83,17 +117,6 @@ class _McqLevelPageState extends State<McqLevelPage> {
     timer.cancel();
 
     super.dispose();
-  }
-
-  Future<void> speak(String text) async {
-    if (isSpeaking)
-      return; // Avoid starting a new speech while one is already in progress
-
-    try {
-      await flutterTts.speak(text);
-    } catch (e) {
-      print('TTS Error: $e');
-    }
   }
 
   @override
@@ -121,7 +144,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
                         //     width: 1.5, color: fontColor.withOpacity(0.2))
                         color: primaryPurple),
                     child: IconButton(
-                        style: IconButton.styleFrom(padding: EdgeInsets.zero),
+                        style: buttonStyle(14),
                         onPressed: () {
                           Navigator.pop(context);
                         },
@@ -194,9 +217,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
                             }
                           });
                         },
-                        style: TextButton.styleFrom(
-                            backgroundColor: primaryPurple,
-                            padding: EdgeInsets.all(0)),
+                        style: buttonStyle(14),
                         child: setText(
                             "Start", FontWeight.w600, 15.sp, Colors.white),
                       ),
@@ -598,11 +619,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
                     // width: 44.w,
                     // height: 6.5.h,
                     child: TextButton(
-                      style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          shape: const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(16)))),
+                      style: buttonStyle(14),
                       onPressed: () {
                         speak(widget.level.description);
                       },
@@ -613,29 +630,27 @@ class _McqLevelPageState extends State<McqLevelPage> {
                   SizedBox(
                     height: 2.h,
                   ),
-                  Container(
-                    width: 80.w,
-                    height: 7.h,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: fontColor.withOpacity(0.2))),
-                    // width: 44.w,
-                    // height: 6.5.h,
-                    child: TextButton(
-                      style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          shape: const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(16)))),
-                      onPressed: () {
-                        setState(() {
-                          description = widget.level.arabicDescription;
-                        });
-                      },
-                      child: setText("Translate to Arabic", FontWeight.w600,
-                          15.sp, fontColor.withOpacity(0.5)),
+                  if (widget.chapter.name.toLowerCase() != "grammar")
+                    Container(
+                      width: 80.w,
+                      height: 7.h,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border:
+                              Border.all(color: fontColor.withOpacity(0.2))),
+                      // width: 44.w,
+                      // height: 6.5.h,
+                      child: TextButton(
+                        style: buttonStyle(14),
+                        onPressed: () {
+                          setState(() {
+                            description = widget.level.arabicDescription;
+                          });
+                        },
+                        child: setText("Translate to Arabic", FontWeight.w600,
+                            15.sp, fontColor.withOpacity(0.5)),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -643,150 +658,151 @@ class _McqLevelPageState extends State<McqLevelPage> {
   }
 
   bool isSaved = false;
+  void updateSaved() {
+    setState(() {
+      isSaved = true;
+    });
+  }
+
   void _showModalBottomSheet(BuildContext context) {
     showModalBottomSheet(
-      isDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16), topRight: Radius.circular(16))),
-          height: 50.h,
-          width: 100.w,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Lottie.asset('assets/animations/Success.json',
-                  width: 50.w, repeat: false),
-              SizedBox(
-                height: 1.h,
-              ),
-              setText("Correct answer!", FontWeight.w600, 14.sp,
-                  fontColor.withOpacity(0.6)),
-              SizedBox(
-                height: 2.h,
-              ),
-              widget.icons.isNotEmpty
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          widget.icons[answered],
-                          color: widget.chapter.colorAsColor,
-                        ),
-                        SizedBox(
-                          width: 2.w,
-                        ),
-                        setText(answered, FontWeight.w600, 15.sp,
-                            widget.chapter.colorAsColor),
-                      ],
-                    )
-                  : setText(answered, FontWeight.w600, 15.sp,
-                      widget.chapter.colorAsColor),
-              SizedBox(
-                height: 4.h,
-              ),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+        isDismissible: false,
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return Container(
+                decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16))),
+                height: 50.h,
+                width: 100.w,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 13.w,
-                      height: 13.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            width: 1.5, color: primaryPurple.withOpacity(0.2)),
-                      ),
-                      child: IconButton(
-                          style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              shape: const RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(16)))),
-                          onPressed: () {
-                            speak(widget.level.word);
-                          },
-                          icon: Icon(
-                            FontAwesomeIcons.microphone,
-                            size: 6.w,
-                            color: primaryPurple,
-                          )),
+                    Lottie.asset('assets/animations/Success.json',
+                        width: 50.w, repeat: false),
+                    SizedBox(
+                      height: 1.h,
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: primaryPurple),
-                      width: 45.w,
-                      height: 13.w,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          // Navigator.pushReplacement(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (BuildContext context) => LevelsMenu(
-                          //       chapter: chapters[widget.chapter.id - 1],
-                          //     ),
-                          //   ),
-                          // );
-                        },
-                        style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            shape: const RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(16)))),
-                        child:
-                            setText("Ok", FontWeight.w600, 15.sp, Colors.white),
-                      ),
+                    setText("Correct answer!", FontWeight.w600, 14.sp,
+                        fontColor.withOpacity(0.6)),
+                    SizedBox(
+                      height: 2.h,
                     ),
-                    Container(
-                      width: 13.w,
-                      height: 13.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            width: 1.5, color: primaryPurple.withOpacity(0.2)),
-                      ),
-                      child: IconButton(
-                          style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              shape: const RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(16)))),
-                          onPressed: () {
-                            if (isSaved) return;
-                            addLearnedWordsToDB(Learnedword(
-                                id: Uuid().v4(),
-                                word: widget.level.word,
-                                type: "meaning",
-                                description: widget.level.description));
-                            setState(() {
-                              isSaved == true;
-                            });
-                          },
-                          icon: AnimatedSwitcher(
-                            duration: Duration(milliseconds: 300),
-                            child: Icon(
-                              isSaved
-                                  ? FontAwesomeIcons.check
-                                  : FontAwesomeIcons.folderPlus,
-                              size: 6.w,
-                              color: primaryPurple,
+                    widget.icons.isNotEmpty
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                widget.icons[answered],
+                                color: widget.chapter.colorAsColor,
+                              ),
+                              SizedBox(
+                                width: 2.w,
+                              ),
+                              setText(answered, FontWeight.w600, 15.sp,
+                                  widget.chapter.colorAsColor),
+                            ],
+                          )
+                        : setText(answered, FontWeight.w600, 15.sp,
+                            widget.chapter.colorAsColor),
+                    SizedBox(
+                      height: 4.h,
+                    ),
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Container(
+                            width: 13.w,
+                            height: 13.w,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  width: 1.5,
+                                  color: primaryPurple.withOpacity(0.2)),
                             ),
-                          )),
-                    ),
+                            child: IconButton(
+                                style: buttonStyle(12),
+                                onPressed: () {
+                                  speak(widget.level.word);
+                                },
+                                icon: Icon(
+                                  FontAwesomeIcons.microphone,
+                                  size: 6.w,
+                                  color: primaryPurple,
+                                )),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: primaryPurple),
+                            width: 45.w,
+                            height: 13.w,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                                // Navigator.pushReplacement(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (BuildContext context) => LevelsMenu(
+                                //       chapter: chapters[widget.chapter.id - 1],
+                                //     ),
+                                //   ),
+                                // );
+                              },
+                              style: buttonStyle(14),
+                              child: setText(
+                                  "Ok", FontWeight.w600, 15.sp, Colors.white),
+                            ),
+                          ),
+                          Container(
+                            width: 13.w,
+                            height: 13.w,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  width: 1.5,
+                                  color: primaryPurple.withOpacity(0.2)),
+                            ),
+                            child: IconButton(
+                                style: buttonStyle(12),
+                                onPressed: () {
+                                  if (isSaved) return;
+                                  addLearnedWordsToDB(Learnedword(
+                                      id: Uuid().v4(),
+                                      word: widget.level.word,
+                                      type: widget.chapter.name.toLowerCase() ==
+                                              "grammr"
+                                          ? "grammar"
+                                          : "meaning",
+                                      description: widget.level.description));
+                                  updateSaved();
+                                },
+                                icon: AnimatedSwitcher(
+                                  duration: Duration(milliseconds: 300),
+                                  child: Icon(
+                                    isSaved
+                                        ? FontAwesomeIcons.check
+                                        : FontAwesomeIcons.folderPlus,
+                                    size: 6.w,
+                                    color: primaryPurple,
+                                  ),
+                                )),
+                          ),
+                        ],
+                      ),
+                    )
                   ],
                 ),
-              )
-            ],
-          ),
-        );
-      },
-    );
+              );
+            },
+          );
+        });
   }
 
   Future<void> answeredCorrectly() async {

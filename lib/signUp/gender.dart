@@ -76,8 +76,8 @@ class _GenderState extends State<Gender> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   Container(
-                    width: 60.w,
-                    height: 60.w,
+                    width: 28.h,
+                    height: 28.h,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: primaryPurple.withOpacity(0.1),

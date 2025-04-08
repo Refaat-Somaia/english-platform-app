@@ -39,7 +39,7 @@ class _UserpointscontainerState extends State<Userpointscontainer> {
             height: 10.h,
             child: Center(
               child: SizedBox(
-                width: 70.w,
+                width: 73.w,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

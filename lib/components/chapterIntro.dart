@@ -249,7 +249,8 @@ class _ChapterintroState extends State<Chapterintro>
             color: widget.chapter.colorAsColor,
             boxShadow: [
               BoxShadow(
-                color: widget.chapter.colorAsColor.withOpacity(0.5),
+                color: widget.chapter.colorAsColor.withOpacity(
+                    preferences.getBool("isDarkMode") == true ? 0.1 : 0.5),
                 spreadRadius: 0.01.h,
                 blurRadius: 8,
                 offset: const Offset(0, 7),

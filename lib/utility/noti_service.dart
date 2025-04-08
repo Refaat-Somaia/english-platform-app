@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:funlish_app/utility/global.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -48,11 +51,13 @@ class NotiService {
   NotificationDetails notificationDetails() {
     return const NotificationDetails(
       android: AndroidNotificationDetails(
-        "daily_channel_id",
-        "Daily Notifications",
+        "daily_channel_id", "Daily Notifications",
         channelDescription: "Daily Notifications channel",
         importance: Importance.high,
         priority: Priority.high,
+        // icon: "@mipmap/noti_icon",
+        // colorized: true,
+        icon: '@mipmap/ic_launcher', // Use the same name as your drawable file
       ),
       iOS: DarwinNotificationDetails(),
     );

@@ -1,17 +1,18 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:funlish_app/mainPages/chapters/listeningLevel.dart';
 import 'package:funlish_app/mainPages/chapters/mcqLevel.dart';
+import 'package:funlish_app/mainPages/flashCards.dart';
+import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/level.dart';
-import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../model/Chapter.dart';
 
@@ -66,6 +67,17 @@ class _LevelsMenuState extends State<LevelsMenu> {
     if (chapterIcons[widget.chapter.name] != null) {
       icons = chapterIcons[widget.chapter.name]!;
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // awaitDB();
+      Timer(Duration(milliseconds: 1000), () {
+        if (widget.chapter.levelsPassed > 3) {
+          scrollController.animateTo(
+              20.h * chapters[widget.chapter.id - 1].levelsPassed,
+              duration: Duration(seconds: 1),
+              curve: Curves.easeInOut);
+        }
+      });
+    });
   }
 
   @override
@@ -90,10 +102,11 @@ class _LevelsMenuState extends State<LevelsMenu> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: bodyColor,
       body: isLoading
           ? Container(
               decoration: BoxDecoration(
-                color: widget.chapter.colorAsColor.withOpacity(0.05),
+                color: widget.chapter.colorAsColor.withOpacity(0.06),
               ),
               child: Center(
                 child: LoadingAnimationWidget.staggeredDotsWave(
@@ -102,7 +115,7 @@ class _LevelsMenuState extends State<LevelsMenu> {
             )
           : Container(
               decoration: BoxDecoration(
-                color: widget.chapter.colorAsColor.withOpacity(0.05),
+                color: widget.chapter.colorAsColor.withOpacity(0.06),
                 // color: Colors.white,
               ),
               height: double.infinity,
@@ -300,90 +313,41 @@ class _LevelsMenuState extends State<LevelsMenu> {
                                         context,
                                         CupertinoPageRoute(
                                             builder: (BuildContext context) =>
-                                                (index % 5 == 0 &&
-                                                        mcqLevels[index]
-                                                                .levelType !=
-                                                            2)
-                                                    ? Listeninglevel(
-                                                        words: words,
-                                                        icons: icons,
-                                                        updateChapters:
-                                                            updateChpaters,
-                                                        updateLevels:
-                                                            updateMcqLevels,
-                                                        chapter: chapters[
-                                                            widget.chapter.id -
-                                                                1],
-                                                        level: McqLevel(
-                                                            id: mcqLevels[index]
-                                                                .id,
-                                                            isPassed:
-                                                                mcqLevels[index]
-                                                                    .isPassed,
-                                                            arabicDescription:
-                                                                mcqLevels[index]
-                                                                    .arabicDescription,
-                                                            isReset: mcqLevels[index]
-                                                                .isReset,
-                                                            stars: mcqLevels[index]
-                                                                .stars,
-                                                            levelType:
-                                                                mcqLevels[index]
-                                                                    .levelType,
-                                                            chapterId: chapters[
-                                                                    widget.chapter.id -
-                                                                        1]
-                                                                .id,
-                                                            description:
-                                                                mcqLevels[index]
-                                                                    .description,
-                                                            word:
-                                                                mcqLevels[index]
-                                                                    .word,
-                                                            points:
-                                                                mcqLevels[index]
-                                                                    .points),
-                                                      )
-                                                    : McqLevelPage(
-                                                        words: words,
-                                                        icons: icons,
-                                                        updateChapters:
-                                                            updateChpaters,
-                                                        updateLevels:
-                                                            updateMcqLevels,
-                                                        chapter: chapters[
-                                                            widget.chapter.id -
-                                                                1],
-                                                        level: McqLevel(
-                                                            id: mcqLevels[index]
-                                                                .id,
-                                                            isPassed:
-                                                                mcqLevels[index]
-                                                                    .isPassed,
-                                                            arabicDescription:
-                                                                mcqLevels[index]
-                                                                    .arabicDescription,
-                                                            isReset: mcqLevels[index]
-                                                                .isReset,
-                                                            stars: mcqLevels[index]
-                                                                .stars,
-                                                            levelType:
-                                                                mcqLevels[index]
-                                                                    .levelType,
-                                                            chapterId: chapters[
-                                                                    widget.chapter.id -
-                                                                        1]
-                                                                .id,
-                                                            description:
-                                                                mcqLevels[index]
-                                                                    .description,
-                                                            word:
-                                                                mcqLevels[index]
-                                                                    .word,
-                                                            points:
-                                                                mcqLevels[index]
-                                                                    .points),
-                                                      )),
+                                                McqLevelPage(
+                                                  words: words,
+                                                  icons: icons,
+                                                  updateChapters:
+                                                      updateChpaters,
+                                                  updateLevels: updateMcqLevels,
+                                                  chapter: chapters[
+                                                      widget.chapter.id - 1],
+                                                  level: McqLevel(
+                                                      id: mcqLevels[index].id,
+                                                      isPassed: mcqLevels[index]
+                                                          .isPassed,
+                                                      arabicDescription:
+                                                          mcqLevels[index]
+                                                              .arabicDescription,
+                                                      isReset:
+                                                          mcqLevels[index]
+                                                              .isReset,
+                                                      stars:
+                                                          mcqLevels[index]
+                                                              .stars,
+                                                      levelType: mcqLevels[index]
+                                                          .levelType,
+                                                      chapterId:
+                                                          chapters[widget.chapter.id -
+                                                                  1]
+                                                              .id,
+                                                      description: mcqLevels[
+                                                              index]
+                                                          .description,
+                                                      word:
+                                                          mcqLevels[index].word,
+                                                      points: mcqLevels[index]
+                                                          .points),
+                                                )),
                                       );
                                     },
                                     child: Row(
@@ -405,14 +369,14 @@ class _LevelsMenuState extends State<LevelsMenu> {
                                           alignment: Alignment.center,
                                           children: [
                                             Container(
-                                              width: 60.w,
-                                              height: 15.h,
+                                              width: 62.w,
+                                              height: 16.h,
                                               decoration: BoxDecoration(
                                                 borderRadius:
                                                     BorderRadius.circular(24),
                                                 color: isCompleted
-                                                    ? Colors.white
-                                                    : Colors.white
+                                                    ? bodyColor
+                                                    : bodyColor
                                                         .withOpacity(0.4),
                                                 // border: Border.all(
                                                 //     width: 2,
@@ -421,8 +385,12 @@ class _LevelsMenuState extends State<LevelsMenu> {
                                                 //         : Colors.transparent),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.15),
+                                                    color: Colors.grey.withOpacity(
+                                                        preferences.getBool(
+                                                                    "isDarkMode") ==
+                                                                true
+                                                            ? 0
+                                                            : 0.15),
                                                     spreadRadius: 0.01.h,
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 7),
@@ -644,118 +612,192 @@ class _LevelsMenuState extends State<LevelsMenu> {
     );
   }
 
-  void _showModalBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16), topRight: Radius.circular(16))),
-          height: 30.h,
-          width: 100.w,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: primaryPurple),
-                  width: 80.w,
-                  height: 13.w,
-                  child: TextButton(
-                    onPressed: () async {
-                      updateChapterInDB(Chapter(
-                          id: widget.chapter.id,
-                          name: widget.chapter.name,
-                          description: widget.chapter.description,
-                          levelCount: widget.chapter.levelCount,
-                          pointsCollected: widget.chapter.pointsCollected,
-                          starsCollected: 0,
-                          levelsPassed: 0,
-                          color: widget.chapter.color));
-                      setState(() {
-                        chapters[widget.chapter.id - 1] = Chapter(
-                            id: widget.chapter.id,
-                            name: widget.chapter.name,
-                            description: widget.chapter.description,
-                            levelCount: widget.chapter.levelCount,
-                            pointsCollected: widget.chapter.pointsCollected,
-                            starsCollected: 0,
-                            levelsPassed: 0,
-                            color: widget.chapter.color);
-                        widget.update(chapters);
-                        for (int i = 0; i < mcqLevels.length; i++) {
-                          if (mcqLevels[i].chapterId == widget.chapter.id) {
-                            updateMcqLevelInDB(McqLevel(
-                                id: mcqLevels[i].id,
-                                levelType: mcqLevels[i].levelType,
-                                chapterId: mcqLevels[i].chapterId,
-                                description: mcqLevels[i].description,
-                                arabicDescription:
-                                    mcqLevels[i].arabicDescription,
-                                isPassed: 0,
-                                isReset: mcqLevels[i].isPassed == 1 ? 1 : 0,
-                                word: mcqLevels[i].word,
-                                stars: 0,
-                                points: mcqLevels[i].points));
-                          }
-                        }
-                        for (int i = 0; i < mcqLevels.length; i++) {
-                          if (mcqLevels[i].chapterId == widget.chapter.id) {
-                            mcqLevels[i] = McqLevel(
-                                id: mcqLevels[i].id,
-                                chapterId: mcqLevels[i].chapterId,
-                                description: mcqLevels[i].description,
-                                arabicDescription:
-                                    mcqLevels[i].arabicDescription,
-                                isPassed: 0,
-                                levelType: mcqLevels[i].levelType,
-                                word: mcqLevels[i].word,
-                                isReset: mcqLevels[i].isPassed == 1 ? 1 : 0,
-                                stars: 0,
-                                points: mcqLevels[i].points);
-                          }
-                        }
-                      });
-                      setState(() {
-                        mcqLevels;
-                        progress;
-                      });
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                          context,
-                          CupertinoPageRoute(
-                              builder: (context) => LevelsMenu(
-                                    chapter: widget.chapter,
-                                    update: widget.update,
-                                  )));
-                    },
-                    style: TextButton.styleFrom(
-                        backgroundColor: primaryPurple,
-                        padding: EdgeInsets.all(0)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(FontAwesomeIcons.clockRotateLeft,
-                            color: Colors.white),
-                        SizedBox(
-                          width: 3.w,
-                        ),
-                        setText("Reset chapter", FontWeight.w600, 15.sp,
-                            Colors.white),
-                      ],
-                    ),
+  void _showModalBottomSheet(context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return Animate(
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                insetPadding: EdgeInsets.all(5.w),
+                backgroundColor: bodyColor,
+                content: SizedBox(
+                  height: 40.h,
+                  width: double.maxFinite,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 2.h,
+                      ),
+                      setText("${widget.chapter.name} chapter", FontWeight.w600,
+                          18.sp, widget.chapter.colorAsColor),
+                      SizedBox(
+                        height: 6.h,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: widget.chapter.colorAsColor),
+                            width: 38.w,
+                            height: 18.h,
+                            child: TextButton(
+                              onPressed: () {
+                                List<Learnedword> word = [];
+                                for (McqLevel level in mcqLevels) {
+                                  if (level.isPassed == 1) {
+                                    word.add(Learnedword(
+                                        id: Uuid().v4(),
+                                        word: level.word,
+                                        type: "",
+                                        description: level.description));
+                                  }
+                                  word.shuffle();
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    CupertinoPageRoute(
+                                      builder: (BuildContext context) =>
+                                          FlashcardsPage(word: word),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: buttonStyle(16),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    FontAwesomeIcons.clipboard,
+                                    color: Colors.white,
+                                    size: 9.w,
+                                  ),
+                                  SizedBox(
+                                    height: 1.h,
+                                  ),
+                                  setText("Review chapter", FontWeight.w600,
+                                      15.sp, Colors.white, true),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: widget.chapter.colorAsColor),
+                            width: 38.w,
+                            height: 18.h,
+                            child: TextButton(
+                              onPressed: () async {
+                                updateChapterInDB(Chapter(
+                                    id: widget.chapter.id,
+                                    name: widget.chapter.name,
+                                    description: widget.chapter.description,
+                                    levelCount: widget.chapter.levelCount,
+                                    pointsCollected:
+                                        widget.chapter.pointsCollected,
+                                    starsCollected: 0,
+                                    levelsPassed: 0,
+                                    color: widget.chapter.color));
+                                setState(() {
+                                  chapters[widget.chapter.id - 1] = Chapter(
+                                      id: widget.chapter.id,
+                                      name: widget.chapter.name,
+                                      description: widget.chapter.description,
+                                      levelCount: widget.chapter.levelCount,
+                                      pointsCollected:
+                                          widget.chapter.pointsCollected,
+                                      starsCollected: 0,
+                                      levelsPassed: 0,
+                                      color: widget.chapter.color);
+                                  widget.update(chapters);
+                                  for (int i = 0; i < mcqLevels.length; i++) {
+                                    if (mcqLevels[i].chapterId ==
+                                        widget.chapter.id) {
+                                      updateMcqLevelInDB(McqLevel(
+                                          id: mcqLevels[i].id,
+                                          levelType: mcqLevels[i].levelType,
+                                          chapterId: mcqLevels[i].chapterId,
+                                          description: mcqLevels[i].description,
+                                          arabicDescription:
+                                              mcqLevels[i].arabicDescription,
+                                          isPassed: 0,
+                                          isReset: mcqLevels[i].isPassed == 1
+                                              ? 1
+                                              : 0,
+                                          word: mcqLevels[i].word,
+                                          stars: 0,
+                                          points: mcqLevels[i].points));
+                                    }
+                                  }
+                                  for (int i = 0; i < mcqLevels.length; i++) {
+                                    if (mcqLevels[i].chapterId ==
+                                        widget.chapter.id) {
+                                      mcqLevels[i] = McqLevel(
+                                          id: mcqLevels[i].id,
+                                          chapterId: mcqLevels[i].chapterId,
+                                          description: mcqLevels[i].description,
+                                          arabicDescription:
+                                              mcqLevels[i].arabicDescription,
+                                          isPassed: 0,
+                                          levelType: mcqLevels[i].levelType,
+                                          word: mcqLevels[i].word,
+                                          isReset: mcqLevels[i].isPassed == 1
+                                              ? 1
+                                              : 0,
+                                          stars: 0,
+                                          points: mcqLevels[i].points);
+                                    }
+                                  }
+                                });
+                                setState(() {
+                                  mcqLevels;
+                                  progress;
+                                });
+                                Navigator.pop(context);
+                                Navigator.pushReplacement(
+                                    context,
+                                    CupertinoPageRoute(
+                                        builder: (context) => LevelsMenu(
+                                              chapter: widget.chapter,
+                                              update: widget.update,
+                                            )));
+                              },
+                              style: buttonStyle(16),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    FontAwesomeIcons.clockRotateLeft,
+                                    color: Colors.white,
+                                    size: 8.w,
+                                  ),
+                                  SizedBox(
+                                    height: 1.h,
+                                  ),
+                                  setText("Reset chapter", FontWeight.w600,
+                                      15.sp, Colors.white, true),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              )
-            ],
-          ),
-        );
-      },
-    );
+              ),
+            )
+                .slideY(begin: .1, end: 0, curve: Curves.ease, duration: 400.ms)
+                .fadeIn();
+          });
+        });
   }
 }
 

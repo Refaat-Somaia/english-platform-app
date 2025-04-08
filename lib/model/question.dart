@@ -1,7 +1,7 @@
 class Question {
   final int id;
   final String status;
-  final String? sort;
+  final int? sort;
   final String userCreated;
   final DateTime dateCreated;
   final String? userUpdated;

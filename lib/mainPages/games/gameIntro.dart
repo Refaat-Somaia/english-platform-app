@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:funlish_app/mainPages/games/createSession.dart';
+import 'package:funlish_app/mainPages/games/escapeLevel.dart';
 import 'package:funlish_app/mainPages/games/inputLevel.dart';
 import 'package:funlish_app/mainPages/games/puzzleLevel.dart';
 import 'package:funlish_app/utility/global.dart';
@@ -43,6 +44,13 @@ class _GameintroState extends State<Gameintro> {
 
   @override
   Widget build(BuildContext context) {
+    for (int i = 1; i <= 4; i++) {
+      Image.asset(
+        'assets/images/games/room$i.jpg',
+        width: 0,
+      );
+    }
+
     return Scaffold(
       backgroundColor: bodyColor,
       body: Container(
@@ -125,18 +133,16 @@ class _GameintroState extends State<Gameintro> {
                             ],
                           ),
                         ),
-                        Container(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                "assets/images/coins.png",
-                                height: 4.h,
-                              ),
-                              setText("Highest score:", FontWeight.w600, 13.sp,
-                                  fontColor),
-                            ],
-                          ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              "assets/images/coins.png",
+                              height: 4.h,
+                            ),
+                            setText("Total score:", FontWeight.w600, 13.sp,
+                                fontColor),
+                          ],
                         ),
                       ],
                     ),
@@ -166,11 +172,16 @@ class _GameintroState extends State<Gameintro> {
                                     widget.gameName == "Bomb Relay"
                                         ? Inputlevel(
                                             color: widget.color,
-                                            timerDuration: 15,
+                                            playAgain: false,
                                           )
-                                        : Puzzlelevel(
-                                            color: widget.color,
-                                            timerDuration: 60)));
+                                        : widget.gameName == "Word Puzzle"
+                                            ? Puzzlelevel(
+                                                color: widget.color,
+                                                playAgain: false)
+                                            : Escapelevel(
+                                                playAgain: false,
+                                                color: widget.color,
+                                              )));
                       },
                       child: setText("Public session", FontWeight.w600, 15.sp,
                           Colors.white),
@@ -251,7 +262,7 @@ class _GameintroState extends State<Gameintro> {
                     //     width: 1.5, color: fontColor.withOpacity(0.2))
                     color: widget.color),
                 child: IconButton(
-                    style: IconButton.styleFrom(padding: EdgeInsets.zero),
+                    style: buttonStyle(16),
                     onPressed: () {
                       Navigator.pop(context);
                     },

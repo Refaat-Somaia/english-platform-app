@@ -8,20 +8,24 @@ import 'package:funlish_app/components/afterGameScreens/drawScreen.dart';
 import 'package:funlish_app/components/afterGameScreens/lostScreen.dart';
 import 'package:funlish_app/components/afterGameScreens/winScreen.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
+import 'package:funlish_app/components/topNotification.dart';
 import 'package:funlish_app/model/player.dart';
+import 'package:funlish_app/model/powerUp.dart';
+import 'package:funlish_app/model/userProgress.dart';
+import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/utility/socketIoClient.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 class Inputlevel extends StatefulWidget {
   final Color color;
-  final int timerDuration;
-  const Inputlevel(
-      {super.key, required this.color, required this.timerDuration});
+  final bool playAgain;
+  const Inputlevel({super.key, required this.color, required this.playAgain});
 
   @override
   State<Inputlevel> createState() => _InputlevelState();
@@ -31,8 +35,13 @@ class _InputlevelState extends State<Inputlevel>
     with SingleTickerProviderStateMixin {
   List<bool> isVoted = [false, false, false];
   List<int> votesCount = [0, 0, 0];
-  List<String> answers = [];
-  List<bool> hasAnswered = [];
+  List<String> answers = [
+    "",
+    "",
+    "",
+    "",
+  ];
+  List<bool> hasAnswered = [false, false, false, false];
   int currentQuestion = 0;
   String sentence = "";
   late AnimationController animationController;
@@ -41,26 +50,45 @@ class _InputlevelState extends State<Inputlevel>
   bool isTimeUp = false;
   bool isCountDown = false;
   bool isWon = false;
+  int timerDuration = 15;
   bool isLost = false;
   bool isDraw = false;
   bool isFirst = true;
-  List<dynamic> words = [];
-  List<dynamic> description = [];
+  bool isFriendlyBomb = false;
+  List<dynamic> words = [
+    "",
+    "",
+    "",
+    "",
+  ];
+  List<dynamic> description = [
+    "",
+    "",
+    "",
+    "",
+  ];
   late SocketService socketService;
   final TextEditingController inputController = TextEditingController();
   Timer timer = Timer(Duration(), () {});
   Timer timerPreMatch = Timer(Duration(), () {});
   double progress = 0;
+  void getPowerUps() async {
+    powerUps = await getPowerUpsOfGame('bombRelay');
+    setState(() {});
+  }
+
   void updateLoading() {
     animationController.reverse();
 
     Timer(Duration(milliseconds: 300), () {
       isCountDown = true;
+
       if (mounted) {
         setState(() {
           isLoading = false;
         });
       }
+      playSound("audio/found.MP3");
     });
     timerPreMatch = Timer.periodic(Duration(seconds: 1), (time) {
       if (timerPreMatch.tick <= 3) {
@@ -90,6 +118,8 @@ class _InputlevelState extends State<Inputlevel>
   }
 
   void hasLost() {
+    playSound("audio/lost.mp3");
+
     if (mounted) {
       setState(() {
         isLost = true;
@@ -107,16 +137,17 @@ class _InputlevelState extends State<Inputlevel>
 
   void startTimer() {
     timer.cancel(); // Ensure old timer is stopped before starting a new one
+    playSound("audio/tick.mp3");
 
     timer = Timer.periodic(Duration(seconds: 1), (time) {
       print(time.tick);
       print(isFirst); // Corrected from `timer.tick`
       // Corrected from `timer.tick`
 
-      if (time.tick <= widget.timerDuration) {
+      if (time.tick <= timerDuration) {
         if (mounted) {
           setState(() {
-            progress = (time.tick / widget.timerDuration);
+            progress = (time.tick / timerDuration);
           });
         }
       } else {
@@ -126,17 +157,25 @@ class _InputlevelState extends State<Inputlevel>
               0, (max, player) => player.points > max ? player.points : max);
 
           if (max < currentQuestion) {
-            setState(() {
-              isWon = true;
-            });
+            hasWon();
             socketService.sendMessage(socketService.matchid, "", "IWON");
             return;
           }
-          setState(() {
-            isLost = true;
-          });
-            socketService.sendMessage(socketService.matchid, "", "ILOST");
-
+          if (words.length == currentQuestion) {
+            winCondition();
+          }
+          socketService.sendMessage(
+              socketService.matchid, inputController.text, "answer_bombRelay");
+          if (mounted) {
+            setState(() {
+              isFirst = false;
+              currentQuestion++;
+            });
+            FocusManager.instance.primaryFocus?.unfocus();
+            return;
+          }
+          hasLost();
+          socketService.sendMessage(socketService.matchid, "", "ILOST");
         }
       }
     });
@@ -166,15 +205,28 @@ class _InputlevelState extends State<Inputlevel>
     setState(() {
       isFirst = isFirst1;
       timer.cancel();
+      timerDuration = 15;
+      isFriendlyBomb = false;
     });
+
     if (words.length == currentQuestion) {
       socketService.sendMessage(socketService.matchid, "", "DRAW");
       hasDraw();
+      return;
     }
-    if (!isCountDown && isFirst) startTimer();
+
+    if (!isCountDown && isFirst) {
+      startTimer();
+      return;
+    }
+    playSound("audio/found.MP3");
   }
 
   void hasWon() {
+    final user = Provider.of<UserProgress>(context, listen: false);
+    user.addXP(50);
+    playSound("audio/win.MP3");
+
     setState(() {
       isWon = true;
       timer.cancel();
@@ -182,6 +234,9 @@ class _InputlevelState extends State<Inputlevel>
   }
 
   void hasDraw() {
+    playSound("audio/draw.mp3");
+    final user = Provider.of<UserProgress>(context, listen: false);
+    user.addXP(25);
     setState(() {
       isDraw = true;
       timer.cancel();
@@ -192,6 +247,8 @@ class _InputlevelState extends State<Inputlevel>
   void initState() {
     // TODO: implement initState
     super.initState();
+    playSound("audio/searching.mp3");
+    getPowerUps();
     animationController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     animationController.forward();
@@ -202,24 +259,30 @@ class _InputlevelState extends State<Inputlevel>
           setFirst: setFirst,
           updatePlayers: updatePlayers,
           addPoints: addPoints,
+          extendTimer: extendTimer,
           addSentence: () {},
           hasDraw: hasDraw,
+          friednlyBomb: friednlyBomb,
           hasLost: hasLost,
           hasWon: hasWon,
           addWord: addWord,
           showAlert: () {
+            Navigator.pop(context);
             showAlertModal(context, "Opponent has left");
+            playSound("audio/left.mp3");
           });
     }
-    socketService.connect();
-    socketService.findMatch("bombRelay");
+    Timer(Duration(seconds: widget.playAgain ? 1 : 0), () {
+      socketService.connect();
+      socketService.findMatch("bombRelay");
+    });
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-
+    powerUpTimer.cancel();
     timer.cancel();
     // socketService.findMatch('bombRelay'); // Replace with your actual event name
     animationController.dispose();
@@ -236,378 +299,641 @@ class _InputlevelState extends State<Inputlevel>
           onTap: () {
             FocusManager.instance.primaryFocus?.unfocus();
           },
-          child: Container(
-              decoration: BoxDecoration(
-                  // color: widget.chapter.colorAsColor.withOpacity(0.05),
-                  color: widget.color.withOpacity(0.05)),
-              height: double.infinity,
-              width: 100.w,
-              child: isLoading
-                  ? Animate(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          LoadingAnimationWidget.staggeredDotsWave(
-                              color: widget.color, size: 18.w),
-                          SizedBox(height: 1.h),
-                          setText("Waiting for players...", FontWeight.w600,
-                              16.sp, fontColor),
-                          SizedBox(height: 3.h),
-                          Container(
-                            width: 35.w,
-                            height: 6.h,
-                            decoration: BoxDecoration(
-                                color: widget.color,
-                                borderRadius: BorderRadius.circular(16)),
-                            child: TextButton(
-                              style: OutlinedButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(16)))),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: setText("Cancel", FontWeight.w600, 15.sp,
-                                  Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                      .animate(controller: animationController, autoPlay: false)
-                      .fadeIn(delay: 200.ms, duration: 400.ms, begin: 0)
-                  : isCountDown
-                      ? Countdownscreen(
-                          color: widget.color,
-                          players: players,
-                          time: timerPreMatch.tick,
-                        )
-                      : isWon
-                          ? Winscreen(
-                              color: widget.color,
-                              players: players,
-                              function: playAgain)
-                          : isLost
-                              ? Lostscreen(
+          child: SingleChildScrollView(
+            child: Container(
+                decoration: BoxDecoration(
+                    // color: widget.chapter.colorAsColor.withOpacity(0.05),
+                    color: widget.color.withOpacity(0.05)),
+                height: 100.h,
+                width: 100.w,
+                child: isLoading
+                    ? Animate(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            LoadingAnimationWidget.staggeredDotsWave(
+                                color: widget.color, size: 18.w),
+                            SizedBox(height: 1.h),
+                            setText("Looking for players...", FontWeight.w600,
+                                16.sp, fontColor),
+                            SizedBox(height: 3.h),
+                            Container(
+                              width: 35.w,
+                              height: 6.h,
+                              decoration: BoxDecoration(
                                   color: widget.color,
-                                  players: players,
-                                  function: playAgain)
-                              : isDraw
-                                  ? Drawscreen(
-                                      players: players,
-                                      color: widget.color,
-                                      function: playAgain)
-                                  : SizedBox(
-                                      width: 100.w,
-                                      // decoration:
-                                      //     BoxDecoration(color: widget.color.withOpacity(0.05)),
-                                      child: Column(
-                                          mainAxisAlignment: isFirst
-                                              ? MainAxisAlignment.start
-                                              : MainAxisAlignment.center,
-                                          children: [
-                                            !isFirst
-                                                ? Animate(
-                                                    child: Column(
+                                  borderRadius: BorderRadius.circular(16)),
+                              child: TextButton(
+                                style: OutlinedButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(16)))),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: setText("Cancel", FontWeight.w600, 15.sp,
+                                    Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                        .animate(
+                            controller: animationController, autoPlay: false)
+                        .fadeIn(delay: 200.ms, duration: 400.ms, begin: 0)
+                    : isCountDown
+                        ? Countdownscreen(
+                            color: widget.color,
+                            players: players,
+                            time: timerPreMatch.tick,
+                          )
+                        : isWon
+                            ? Winscreen(
+                                color: widget.color,
+                                players: players,
+                                function: playAgain)
+                            : isLost
+                                ? Lostscreen(
+                                    color: widget.color,
+                                    words: words,
+                                    players: players,
+                                    function: playAgain)
+                                : isDraw
+                                    ? Drawscreen(
+                                        players: players,
+                                        color: widget.color,
+                                        function: playAgain)
+                                    : SizedBox(
+                                        width: 100.w,
+                                        // decoration:
+                                        //     BoxDecoration(color: widget.color.withOpacity(0.05)),
+                                        child: Column(
+                                            mainAxisAlignment: isFirst
+                                                ? MainAxisAlignment.start
+                                                : MainAxisAlignment.center,
+                                            children: [
+                                              !isFirst
+                                                  ? Animate(
+                                                      child: Stack(
+                                                        children: [
+                                                          SizedBox(
+                                                            height: 100.h,
+                                                            width: 100.w,
+                                                            child: Column(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              children: [
+                                                                Lottie.asset(
+                                                                    "assets/animations/bomb.json",
+                                                                    height:
+                                                                        20.h),
+                                                                SizedBox(
+                                                                    height:
+                                                                        1.h),
+                                                                setText(
+                                                                    "The bomb was passed!",
+                                                                    FontWeight
+                                                                        .w600,
+                                                                    16.sp,
+                                                                    fontColor),
+                                                                setText(
+                                                                    "Wait for opponent to pass it back",
+                                                                    FontWeight
+                                                                        .w500,
+                                                                    13.sp,
+                                                                    fontColor
+                                                                        .withOpacity(
+                                                                            0.6)),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          Animate(
+                                                                  child: Positioned(
+                                                            left: 4.w,
+                                                            top: 2.h,
+                                                            child:
+                                                                Topnotification(
+                                                              powerUp:
+                                                                  notificationPowerUp,
+                                                              sender: sender,
+                                                            ),
+                                                          ))
+                                                              .slideY(
+                                                                  begin: -0.3,
+                                                                  end:
+                                                                      showNotification
+                                                                          ? 0
+                                                                          : -3,
+                                                                  curve: Curves
+                                                                      .ease,
+                                                                  duration:
+                                                                      showNotification
+                                                                          ? 400
+                                                                              .ms
+                                                                          : 700
+                                                                              .ms)
+                                                              .fadeIn()
+                                                        ],
+                                                      ),
+                                                    ).fadeIn(
+                                                      delay: 200.ms,
+                                                      duration: 400.ms,
+                                                      begin: 0)
+                                                  : Stack(
                                                       children: [
-                                                        Lottie.asset(
-                                                            "assets/animations/bomb.json",
-                                                            height: 20.h),
-                                                        SizedBox(height: 1.h),
-                                                        setText(
-                                                            "The the bomb was passed!",
-                                                            FontWeight.w600,
-                                                            16.sp,
-                                                            fontColor),
-                                                        setText(
-                                                            "Wait for opponent to pass it back",
-                                                            FontWeight.w500,
-                                                            13.sp,
-                                                            fontColor
-                                                                .withOpacity(
-                                                                    0.6)),
-                                                      ],
-                                                    ),
-                                                  ).fadeIn(
-                                                    delay: 200.ms,
-                                                    duration: 400.ms,
-                                                    begin: 0)
-                                                : Column(
-                                                    children: [
-                                                      SizedBox(
-                                                        height: 6.h,
-                                                      ),
-                                                      CircularPercentIndicator(
-                                                        radius: 6.h,
-                                                        backgroundColor:
-                                                            fontColor
-                                                                .withOpacity(
-                                                                    0.2),
-                                                        animation: true,
-                                                        animateFromLastPercent:
-                                                            true,
-                                                        curve: Curves.easeOut,
-                                                        animationDuration: 400,
-                                                        progressColor: progress <
-                                                                0.4
-                                                            ? const Color
-                                                                .fromARGB(255,
-                                                                68, 186, 129)
-                                                            : progress < 0.7
-                                                                ? Colors
-                                                                    .orangeAccent
-                                                                : Colors
-                                                                    .redAccent,
-                                                        percent: progress,
-                                                        center: setText(
-                                                            (widget.timerDuration -
-                                                                    timer.tick)
-                                                                .toString(),
-                                                            FontWeight.bold,
-                                                            16.sp,
-                                                            fontColor
-                                                                .withOpacity(
-                                                                    0.8),
-                                                            true),
-                                                      ),
-                                                      SizedBox(
-                                                        height: 6.h,
-                                                      ),
-                                                      SizedBox(
-                                                        width: 92.w,
-                                                        child: setText(
-                                                            '"${description[currentQuestion]}"',
-                                                            FontWeight.w600,
-                                                            16.sp,
-                                                            fontColor,
-                                                            true),
-                                                      ),
-                                                      SizedBox(
-                                                        height: !isFirst
-                                                            ? 8.h
-                                                            : 6.h,
-                                                      ),
-                                                      setText(
-                                                          "The bomb is passed to you!!!",
-                                                          FontWeight.w600,
-                                                          15.sp,
-                                                          fontColor),
-                                                      SizedBox(height: 5.h),
-                                                      SizedBox(
-                                                        width: 92.w,
-                                                        child: Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
-                                                          children: [
-                                                            Container(
-                                                              width: 70.w,
-                                                              height: 7.h,
-                                                              decoration: BoxDecoration(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
+                                                        SizedBox(
+                                                          width: 100.w,
+                                                          height: 100.h,
+                                                          child: Column(
+                                                            children: [
+                                                              SizedBox(
+                                                                height: 6.h,
+                                                              ),
+                                                              CircularPercentIndicator(
+                                                                radius: 6.h,
+                                                                backgroundColor:
+                                                                    fontColor
+                                                                        .withOpacity(
+                                                                            0.2),
+                                                                animation: true,
+                                                                animateFromLastPercent:
+                                                                    true,
+                                                                curve: Curves
+                                                                    .easeOut,
+                                                                animationDuration:
+                                                                    400,
+                                                                progressColor: progress <
+                                                                        0.4
+                                                                    ? const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        68,
+                                                                        186,
+                                                                        129)
+                                                                    : progress <
+                                                                            0.7
+                                                                        ? Colors
+                                                                            .orangeAccent
+                                                                        : Colors
+                                                                            .redAccent,
+                                                                percent:
+                                                                    progress,
+                                                                center: setText(
+                                                                    (timerDuration -
+                                                                            timer
+                                                                                .tick)
+                                                                        .toString(),
+                                                                    FontWeight
+                                                                        .bold,
+                                                                    16.sp,
+                                                                    fontColor
+                                                                        .withOpacity(
+                                                                            0.8),
+                                                                    true),
+                                                              ),
+                                                              SizedBox(
+                                                                height: 6.h,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 92.w,
+                                                                child: setText(
+                                                                    '"${description[currentQuestion]}"',
+                                                                    FontWeight
+                                                                        .w600,
+                                                                    16.sp,
+                                                                    fontColor,
+                                                                    true),
+                                                              ),
+                                                              SizedBox(
+                                                                height: !isFirst
+                                                                    ? 8.h
+                                                                    : 6.h,
+                                                              ),
+                                                              setText(
+                                                                  "The bomb is passed to you!!!",
+                                                                  FontWeight
+                                                                      .w600,
+                                                                  15.sp,
+                                                                  fontColor),
+                                                              SizedBox(
+                                                                  height: 5.h),
+                                                              SizedBox(
+                                                                width: 92.w,
+                                                                child: Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .spaceBetween,
+                                                                  children: [
+                                                                    Container(
+                                                                      width:
+                                                                          70.w,
+                                                                      height:
+                                                                          7.h,
+                                                                      decoration: BoxDecoration(
+                                                                          borderRadius: BorderRadius.circular(
                                                                               12),
-                                                                  color: Colors
-                                                                      .white),
-                                                              child: Center(
-                                                                child:
-                                                                    TextFormField(
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontFamily:
-                                                                        "magnet",
-                                                                    fontSize:
-                                                                        15.sp,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w600,
-                                                                    color:
-                                                                        fontColor,
-                                                                  ),
-                                                                  decoration:
-                                                                      InputDecoration(
-                                                                    counterStyle:
-                                                                        TextStyle(
+                                                                          color:
+                                                                              Colors.white),
+                                                                      child:
+                                                                          Center(
+                                                                        child:
+                                                                            TextFormField(
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontFamily:
+                                                                                "magnet",
                                                                             fontSize:
-                                                                                0),
-                                                                    hintStyle:
-                                                                        TextStyle(
-                                                                      fontFamily:
-                                                                          "magnet",
-                                                                      fontSize:
-                                                                          15.sp,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w500,
-                                                                      color: fontColor
-                                                                          .withOpacity(
-                                                                              0.3),
+                                                                                15.sp,
+                                                                            fontWeight:
+                                                                                FontWeight.w600,
+                                                                            color:
+                                                                                fontColor,
+                                                                          ),
+                                                                          decoration:
+                                                                              InputDecoration(
+                                                                            counterStyle:
+                                                                                TextStyle(fontSize: 0),
+                                                                            hintStyle:
+                                                                                TextStyle(
+                                                                              fontFamily: "magnet",
+                                                                              fontSize: 15.sp,
+                                                                              fontWeight: FontWeight.w500,
+                                                                              color: fontColor.withOpacity(0.3),
+                                                                            ),
+                                                                            hintText:
+                                                                                "Answer here...",
+                                                                            border:
+                                                                                InputBorder.none,
+                                                                            contentPadding:
+                                                                                EdgeInsets.all(10),
+                                                                          ),
+                                                                          maxLength:
+                                                                              70,
+                                                                          controller:
+                                                                              inputController,
+                                                                        ),
+                                                                      ),
                                                                     ),
-                                                                    hintText:
-                                                                        "Answer here...",
-                                                                    border:
-                                                                        InputBorder
-                                                                            .none,
-                                                                    contentPadding:
-                                                                        EdgeInsets.all(
-                                                                            10),
-                                                                  ),
-                                                                  maxLength: 70,
-                                                                  controller:
-                                                                      inputController,
+                                                                    Container(
+                                                                      width:
+                                                                          20.w,
+                                                                      height:
+                                                                          7.h,
+                                                                      decoration: BoxDecoration(
+                                                                          borderRadius: BorderRadius.circular(
+                                                                              12),
+                                                                          color:
+                                                                              Color(0xff0EB29A)),
+                                                                      child: TextButton(
+                                                                          style: OutlinedButton.styleFrom(padding: EdgeInsets.zero, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12)))),
+                                                                          onPressed: () {
+                                                                            timer.cancel();
+                                                                            if (words[currentQuestion] == inputController.text.trim() ||
+                                                                                isFriendlyBomb) {
+                                                                              if (words.length == currentQuestion) {
+                                                                                winCondition();
+                                                                              }
+
+                                                                              if (mounted) {
+                                                                                setState(() {
+                                                                                  isFirst = false;
+                                                                                  currentQuestion++;
+                                                                                });
+                                                                                socketService.sendMessage(socketService.matchid, inputController.text, "answer_bombRelay");
+
+                                                                                socketService.sendMessage(socketService.matchid, currentQuestion.toString(), "points");
+                                                                                addPoints(preferences.getString("userName")!, currentQuestion.toString());
+                                                                                FocusManager.instance.primaryFocus?.unfocus();
+                                                                              }
+                                                                            } else {
+                                                                              socketService.sendMessage(socketService.matchid, "", "ILOST");
+                                                                              hasLost();
+                                                                            }
+                                                                            inputController.clear();
+                                                                          },
+                                                                          child: FittedBox(
+                                                                            fit:
+                                                                                BoxFit.scaleDown,
+                                                                            child: setText(
+                                                                                "Send",
+                                                                                FontWeight.w600,
+                                                                                15.sp,
+                                                                                Colors.white),
+                                                                          )),
+                                                                    )
+                                                                  ],
                                                                 ),
                                                               ),
-                                                            ),
-                                                            Container(
-                                                              width: 20.w,
-                                                              height: 7.h,
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        if (isVisible)
+                                                          GestureDetector(
+                                                              onTap: () {
+                                                                setState(() {
+                                                                  _width = 12.w;
+                                                                  _height =
+                                                                      12.w;
+                                                                  isVisible =
+                                                                      false;
+                                                                  bgOpacity = 0;
+                                                                });
+                                                              },
+                                                              child:
+                                                                  AnimatedOpacity(
+                                                                opacity:
+                                                                    bgOpacity,
+                                                                duration: Duration(
+                                                                    milliseconds:
+                                                                        200),
+                                                                child:
+                                                                    Container(
+                                                                  width: 100.w,
+                                                                  height: 100.h,
+                                                                  color: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                          0.3),
+                                                                ),
+                                                              )),
+                                                        Positioned(
+                                                            right: 3.w,
+                                                            bottom: 2.5.h,
+                                                            child:
+                                                                AnimatedContainer(
+                                                              duration: Duration(
+                                                                  milliseconds:
+                                                                      300),
+                                                              padding: EdgeInsets
+                                                                  .all(_width >
+                                                                          12.w
+                                                                      ? 15
+                                                                      : 0),
+                                                              constraints:
+                                                                  BoxConstraints(
+                                                                      minWidth:
+                                                                          _width,
+                                                                      minHeight:
+                                                                          _height),
+                                                              curve:
+                                                                  Curves.ease,
                                                               decoration: BoxDecoration(
+                                                                  color: Colors
+                                                                      .white,
                                                                   borderRadius:
                                                                       BorderRadius
                                                                           .circular(
-                                                                              12),
-                                                                  color: Color(
-                                                                      0xff0EB29A)),
+                                                                              12)),
                                                               child: TextButton(
-                                                                  style: OutlinedButton.styleFrom(
-                                                                      padding:
-                                                                          EdgeInsets
-                                                                              .zero,
-                                                                      shape: const RoundedRectangleBorder(
-                                                                          borderRadius: BorderRadius.all(Radius.circular(
-                                                                              12)))),
-                                                                  onPressed:
-                                                                      () {
-                                                                    timer
-                                                                        .cancel();
-                                                                    if (words[
-                                                                            currentQuestion] ==
-                                                                        inputController
-                                                                            .text) {
-                                                                      if (words
-                                                                              .length ==
-                                                                          currentQuestion) {
-                                                                        winCondition();
-                                                                      }
-                                                                      socketService.sendMessage(
-                                                                          socketService
-                                                                              .matchid,
-                                                                          inputController
-                                                                              .text,
-                                                                          "answer_bombRelay");
-                                                                      if (mounted) {
-                                                                        setState(
-                                                                            () {
-                                                                          isFirst =
-                                                                              false;
-                                                                          currentQuestion++;
-                                                                        });
-                                                                        FocusManager
-                                                                            .instance
-                                                                            .primaryFocus
-                                                                            ?.unfocus();
-                                                                      }
-                                                                    } else {
-                                                                      socketService.sendMessage(
-                                                                          socketService
-                                                                              .matchid,
-                                                                          "",
-                                                                          "ILOST");
+                                                                style:
+                                                                    buttonStyle(
+                                                                        12),
+                                                                onPressed: () {
+                                                                  if (_width ==
+                                                                      12.w) {
+                                                                    setState(
+                                                                        () {
+                                                                      _width =
+                                                                          70.w;
+
+                                                                      _height =
+                                                                          20.h;
+                                                                    });
+
+                                                                    Timer(
+                                                                        Duration(
+                                                                            milliseconds:
+                                                                                150),
+                                                                        () {
                                                                       setState(
                                                                           () {
-                                                                        isLost =
+                                                                        isVisible =
                                                                             true;
                                                                       });
-                                                                    }
-                                                                    inputController
-                                                                        .clear();
-                                                                  },
-                                                                  child:
-                                                                      FittedBox(
-                                                                    fit: BoxFit
-                                                                        .scaleDown,
-                                                                    child: setText(
-                                                                        "Send",
-                                                                        FontWeight
-                                                                            .w600,
-                                                                        15.sp,
-                                                                        Colors
-                                                                            .white),
-                                                                  )),
-                                                            )
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  )
-                                          ]),
-                                    )),
+                                                                    });
+                                                                    Timer(
+                                                                        Duration(
+                                                                            milliseconds:
+                                                                                200),
+                                                                        () {
+                                                                      setState(
+                                                                          () {
+                                                                        bgOpacity =
+                                                                            1;
+                                                                      });
+                                                                    });
+
+                                                                    return;
+                                                                  }
+                                                                  closeBg();
+                                                                },
+                                                                child: Column(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .center,
+                                                                  children: [
+                                                                    if (_width <
+                                                                        13.w)
+                                                                      Animate(
+                                                                        child: Image
+                                                                            .asset(
+                                                                          "assets/images/power.png",
+                                                                          width:
+                                                                              9.w,
+                                                                        ),
+                                                                      ).fadeIn(),
+                                                                    if (isVisible)
+                                                                      Animate(
+                                                                        child:
+                                                                            Wrap(
+                                                                          alignment:
+                                                                              WrapAlignment.center,
+                                                                          spacing:
+                                                                              7.w,
+                                                                          runSpacing:
+                                                                              2.h,
+                                                                          children: [
+                                                                            for (int i = 0;
+                                                                                i < powerUps.length;
+                                                                                i++)
+                                                                              Column(
+                                                                                children: [
+                                                                                  Container(
+                                                                                    width: 17.w,
+                                                                                    height: 17.w,
+                                                                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: const Color.fromARGB(255, 244, 244, 244)),
+                                                                                    child: TextButton(
+                                                                                        style: buttonStyle(12),
+                                                                                        onPressed: () {
+                                                                                          switch (powerUps[i].name) {
+                                                                                            case "Extended Time":
+                                                                                              if (extendedTimeCount >= 3) {
+                                                                                                return;
+                                                                                              }
+                                                                                              extendTimer();
+                                                                                              socketService.sendMessage(socketService.matchid, "", "EXTENDTIMER");
+                                                                                              closeBg();
+                                                                                              break;
+                                                                                            case "Friendly Bomb":
+                                                                                              friednlyBomb();
+                                                                                              socketService.sendMessage(socketService.matchid, "", "FRIENDLYBOMB");
+                                                                                              closeBg();
+
+                                                                                              break;
+                                                                                            default:
+                                                                                              break;
+                                                                                          }
+                                                                                        },
+                                                                                        child: Image.asset(
+                                                                                          powerUps[i].iconPath,
+                                                                                          height: 12.w,
+                                                                                        )),
+                                                                                  ),
+                                                                                  SizedBox(height: 1.h),
+                                                                                  setText(powerUps[i].count.toString(), FontWeight.bold, 14.sp, fontColor)
+                                                                                ],
+                                                                              ),
+                                                                          ],
+                                                                        ),
+                                                                      ).fadeIn(),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            )),
+                                                        Animate(
+                                                                child: Positioned(
+                                                          left: 4.w,
+                                                          top: 2.h,
+                                                          child:
+                                                              Topnotification(
+                                                            powerUp:
+                                                                notificationPowerUp,
+                                                            sender: sender,
+                                                          ),
+                                                        ))
+                                                            .slideY(
+                                                                begin: -0.3,
+                                                                end:
+                                                                    showNotification
+                                                                        ? 0
+                                                                        : -3,
+                                                                curve:
+                                                                    Curves.ease,
+                                                                duration:
+                                                                    showNotification
+                                                                        ? 400.ms
+                                                                        : 700
+                                                                            .ms)
+                                                            .fadeIn()
+                                                      ],
+                                                    )
+                                            ]),
+                                      )),
+          ),
         ));
   }
 
+  List<PowerUp> powerUps = [];
+  double _width = 12.w;
+  int extendedTimeCount = 0;
+
+  double bgOpacity = 0;
+  double _height = 12.w;
+  PowerUp notificationPowerUp = PowerUp(
+      id: "id",
+      price: 0,
+      count: 0,
+      iconPath: "",
+      description: "",
+      game: "",
+      name: "");
+
+  bool showNotification = false;
+  String sender = "";
+  Timer powerUpTimer = Timer(Duration(), () {});
+  bool isVisible = false;
   void winCondition() {
     socketService.sendMessage(socketService.matchid, "", "IWON");
-    setState(() {
-      isWon = true;
-    });
+    hasWon();
     timer.cancel();
   }
 
-  Widget TeammateCard(int index) {
-    return Column(
-      children: [
-        setText(players[index].name, FontWeight.w600, 15.sp,
-            fontColor.withOpacity(0.6)),
-        Image.asset(
-          "assets/images/mascot-avatar.png",
-          width: 35.w,
-        ),
-        SizedBox(height: 2.h),
-        setText("Answer:", FontWeight.w600, 13.sp, fontColor.withOpacity(0.4)),
-        SizedBox(height: 0.5.h),
-        setText(answers[index], FontWeight.bold, 18.sp, fontColor),
-        setText("Votes: ${votesCount[index]}", FontWeight.w500, 14.sp,
-            fontColor.withOpacity(0.6)),
-        SizedBox(height: 2.h),
-        AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          width: 40.w,
-          height: 6.h,
-          decoration: BoxDecoration(
-              color: isVoted[index] ? Colors.white : Color(0xff0EB29A),
-              borderRadius: BorderRadius.circular(12)),
-          child: TextButton(
-            style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)))),
-            onPressed: () {
-              if (mounted) {
-                setState(() {
-                  isVoted[index] = !(isVoted[index]);
-                  isVoted[index] ? votesCount[index]++ : votesCount[index]--;
-                });
-              }
-            },
-            child: setText(
-                isVoted[index] ? "Voted" : "Vote",
-                FontWeight.w600,
-                15.sp,
-                isVoted[index] ? fontColor.withOpacity(0.7) : Colors.white),
-          ),
-        )
-      ],
-    );
+  extendTimer([sender1]) {
+    powerUpTimer.cancel();
+    if (sender1 != null) {
+      sender = sender1.toString();
+      playSound('audio/enemyPowerUp.mp3');
+    } else {
+      sender = preferences.getString("userName")!;
+      playSound('audio/powerUp.mp3');
+    }
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Extended Time") {
+        setState(() {
+          notificationPowerUp = powerUp;
+          showNotification = true;
+        });
+      }
+    }
+    powerUpTimer = Timer(Duration(seconds: 6), () {
+      setState(() {
+        showNotification = false;
+      });
+    });
+
+    setState(() {
+      timerDuration += 10;
+      // extendedTimeCount++;
+    });
   }
 
   playAgain() {
-    socketService.disconnect();
+    // socketService.disconnect();
     Navigator.pushReplacement(
         context,
         CupertinoPageRoute(
             builder: (BuildContext context) =>
-                Inputlevel(color: widget.color, timerDuration: 15)));
+                Inputlevel(color: widget.color, playAgain: true)));
+  }
+
+  closeBg() {
+    setState(() {
+      _width = 12.w;
+      _height = 12.w;
+      bgOpacity = 0;
+      isVisible = false;
+    });
+  }
+
+  friednlyBomb([sender1]) {
+    powerUpTimer.cancel();
+    if (sender1 != null) {
+      sender = sender1.toString();
+      playSound('audio/enemyPowerUp.mp3');
+    } else {
+      sender = preferences.getString("userName")!;
+      playSound('audio/powerUp.mp3');
+    }
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Friendly Bomb") {
+        setState(() {
+          notificationPowerUp = powerUp;
+          showNotification = true;
+          sender = sender.toString();
+        });
+      }
+
+      powerUpTimer = Timer(Duration(seconds: 6), () {
+        setState(() {
+          showNotification = false;
+        });
+      });
+    }
+
+    setState(() {
+      isFriendlyBomb = true;
+    });
   }
 }

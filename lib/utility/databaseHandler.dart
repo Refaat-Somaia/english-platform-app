@@ -1,18 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/level.dart';
+import 'package:funlish_app/model/powerUp.dart';
 import 'package:funlish_app/utility/premadeData.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 import '../model/Chapter.dart';
-import 'global.dart';
 
 Database? database;
 
 Future<void> openDB() async {
   if (database != null) {
-    // Database already initialized
     debugPrint("Database already opened.");
     return;
   }
@@ -21,57 +20,149 @@ Future<void> openDB() async {
     debugPrint("Opening database...");
     database = await openDatabase(
       join(await getDatabasesPath(), 'funlish.db'),
-      version: 1,
+      version: 5,
       onCreate: (db, version) async {
-        // Create necessary tables
+        debugPrint("Creating tables...");
         await db.execute('''
-  CREATE TABLE chapters (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    levelCount INTEGER,
-    levelsPassed INTEGER,
-    starsCollected INTEGER,
-    pointsCollected INTEGER,
-    color INTEGER
-  )
-''');
-        await db.execute('''
-CREATE TABLE mcqLevels (
-    id TEXT PRIMARY KEY,
-    chapterId INTEGER NOT NULL,
-    description TEXT,
-    arabicDescription TEXT,
-    levelType INTEGER,
-    stars INTEGER,
-    isReset INTEGER,
-    word TEXT,
-    isPassed INTEGER,
-    points INTEGER
-    )
-''');
+          CREATE TABLE chapters (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            levelCount INTEGER,
+            levelsPassed INTEGER,
+            starsCollected INTEGER,
+            pointsCollected INTEGER,
+            color INTEGER
+          )
+        ''');
 
         await db.execute('''
-CREATE TABLE learnedWords (
-    id TEXT PRIMARY KEY,
-    word TEXT,
-    type TEXT,
-    description TEXT
-    )
-''');
+          CREATE TABLE mcqLevels (
+            id TEXT PRIMARY KEY,
+            chapterId INTEGER NOT NULL,
+            description TEXT,
+            arabicDescription TEXT,
+            levelType INTEGER,
+            stars INTEGER,
+            isReset INTEGER,
+            word TEXT,
+            isPassed INTEGER,
+            points INTEGER
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE learnedWords (
+            id TEXT PRIMARY KEY,
+            word TEXT,
+            type TEXT,
+            description TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE powerUps (
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            game TEXT,
+            price INTEGER,
+            count INTEGER,
+            description TEXT,
+            iconPath TEXT
+          )
+        ''');
 
         debugPrint("Tables created.");
+        await insertChapters(db);
+        await insertMcqLevels(db);
+        await insertDefaultPowerUps(db); // Ensure power-ups are preloaded
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 5) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS powerUps (
+              id TEXT PRIMARY KEY,
+              name TEXT,
+              game TEXT,
+              price INTEGER,
+              count INTEGER,
+              description TEXT,
+              iconPath TEXT
+            )
+          ''');
+          debugPrint("powerUps table added.");
+          await insertDefaultPowerUps(db);
+        }
       },
       onOpen: (db) async {
         debugPrint("Database is now open.");
-        await insertChapters(db); // Ensure this runs only after initialization
-        await insertMcqLevels(db); // Ensure this runs only after initialization
       },
     );
+
     debugPrint("Database initialized successfully.");
   } catch (e) {
     debugPrint("Error initializing database: $e");
     throw Exception("Database initialization failed.");
+  }
+}
+
+Future<void> insertDefaultPowerUps(Database db) async {
+  final List<Map<String, dynamic>> powerUps = await db.query('powerUps');
+  if (powerUps.isEmpty) {
+    await insertPowerUp(
+        db,
+        PowerUp(
+            id: Uuid().v4(),
+            count: 2,
+            description:
+                "In Bomb Relay, the bomb won't explode if you answered incorrectly.",
+            game: "bombRelay",
+            price: 200,
+            iconPath: "assets/images/bomb.png",
+            name: "Friendly Bomb"));
+    await insertPowerUp(
+        db,
+        PowerUp(
+            id: Uuid().v4(),
+            count: 2,
+            price: 200,
+            game: "wordPuzzle",
+            iconPath: "assets/images/puzzle.png",
+            description: "In Word Puzzle, unlock half of the word's letters.",
+            name: "Puzzle Hint"));
+    await insertPowerUp(
+        db,
+        PowerUp(
+            id: Uuid().v4(),
+            count: 2,
+            game: "all",
+            price: 200,
+            iconPath: "assets/images/clock.png",
+            description:
+                "Extend the time in time-based games (when activated, time is extended for all players).",
+            name: "Extended Time"));
+    await insertPowerUp(
+        db,
+        PowerUp(
+            id: Uuid().v4(),
+            count: 2,
+            price: 200,
+            game: "castleEscape",
+            iconPath: "assets/images/key.png",
+            description:
+                "In Castle Escape, escape the current room with a key.",
+            name: "Secret Key"));
+    await insertPowerUp(
+        db,
+        PowerUp(
+            id: Uuid().v4(),
+            count: 2,
+            price: 200,
+            game: "castleEscape",
+            iconPath: "assets/images/lock.png",
+            description:
+                "In Castle Escape, add another question to other players.",
+            name: "Additional Lock"));
   }
 }
 
@@ -104,6 +195,67 @@ Future<void> insertChapters(Database db) async {
     debugPrint("Error inserting chapters: $e");
     throw Exception("Failed to insert chapters.");
   }
+}
+
+Future<void> insertPowerUp(Database db, PowerUp powerUp) async {
+  await db.insert(
+    'powerUps',
+    {
+      'id': powerUp.id,
+      'description': powerUp.description,
+      'name': powerUp.name,
+      "iconPath": powerUp.iconPath,
+      "price": powerUp.price,
+      'game': powerUp.game,
+      'count': powerUp.count
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace, // Prevents duplicate IDs
+  );
+}
+
+Future<List<PowerUp>> getPowerUpsFromDB() async {
+  final db = await database;
+
+  final List<Map<String, dynamic>> maps = await db!.query('powerUps');
+
+  return List.generate(maps.length, (i) {
+    return PowerUp(
+        id: maps[i]["id"],
+        count: maps[i]["count"],
+        price: maps[i]["price"],
+        iconPath: maps[i]["iconPath"],
+        description: maps[i]["description"],
+        game: maps[i]["game"],
+        name: maps[i]["name"]);
+  });
+}
+
+Future<List<PowerUp>> getPowerUpsOfGame(String gameName) async {
+  final db = await database;
+
+  final List<Map<String, dynamic>> maps = await db!.query('powerUps',
+      where: "game = ? OR game = 'all'", whereArgs: [gameName]);
+
+  return List.generate(maps.length, (i) {
+    return PowerUp(
+        id: maps[i]["id"],
+        count: maps[i]["count"],
+        price: maps[i]["price"],
+        iconPath: maps[i]["iconPath"],
+        description: maps[i]["description"],
+        game: maps[i]["game"],
+        name: maps[i]["name"]);
+  });
+}
+
+Future<void> updatePowerUp(String id, int newCount) async {
+  final db = await database;
+  await db!.update(
+    'powerUps',
+    {'count': newCount},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
 }
 
 Future<void> insertMcqLevels(Database db) async {

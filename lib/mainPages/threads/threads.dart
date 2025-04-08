@@ -41,10 +41,14 @@ class _ThreadsState extends State<Threads> {
                       width: 100.w,
                       height: 22.h,
                       decoration: BoxDecoration(
-                        color: Color(0xffF2EDFF),
+                        color: preferences.getBool("isDarkMode") == true
+                            ? Color.fromARGB(255, 54, 35, 97)
+                            : Color(0xffF2EDFF),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color.fromARGB(255, 237, 237, 237),
+                            color: preferences.getBool("isDarkMode") == true
+                                ? Colors.black
+                                : const Color.fromARGB(255, 237, 237, 237),
                             spreadRadius: 0.01.h,
                             blurRadius: 8,
                             offset: const Offset(0, 7),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:funlish_app/utility/global.dart';
+import 'package:funlish_app/utility/noti_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProgress extends ChangeNotifier {
@@ -28,6 +29,12 @@ class UserProgress extends ChangeNotifier {
     while (xp >= xpForNextLevel()) {
       xp -= xpForNextLevel();
       level++;
+      final notiService = NotiService();
+
+      notiService.showNotification(
+        title: "Leveled Up!",
+        body: "You have reached level $level, congratulations!",
+      );
     }
     await saveProgress();
 

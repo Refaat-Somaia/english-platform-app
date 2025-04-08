@@ -12,7 +12,7 @@ void showSuccessModal(BuildContext context, String msg) {
     builder: (BuildContext context) {
       return Container(
         decoration: BoxDecoration(
-            color: Colors.transparent,
+            color: bodyColor,
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16), topRight: Radius.circular(16))),
         height: 30.h,

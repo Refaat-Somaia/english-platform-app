@@ -20,7 +20,7 @@ class _LeaderboardState extends State<Leaderboard> {
       backgroundColor: bodyColor,
       body: SizedBox(
           width: 100.w,
-          height: double.infinity,
+          height: 100.h,
           child: Stack(alignment: Alignment.center, children: [
             Positioned(
               left: 4.w,
@@ -45,20 +45,13 @@ class _LeaderboardState extends State<Leaderboard> {
                     )),
               ),
             ),
-            Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Column(children: [
               SizedBox(
-                height: 10.h,
+                height: 4.5.h,
               ),
+              setText("Leaderboard", FontWeight.w600, 17.sp, fontColor),
               SizedBox(
-                width: 90.w,
-                child: Row(
-                  children: [
-                    setText("Leaderboard", FontWeight.w600, 16.sp, fontColor),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 2.h,
+                height: 3.h,
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
                 Container(
@@ -125,9 +118,9 @@ class _LeaderboardState extends State<Leaderboard> {
                     ],
                   ),
                 ),
-                SizedBox(height: 1.h),
+                SizedBox(height: 2.h),
                 SizedBox(
-                  height: 72.h,
+                  height: 80.h,
                   child: SingleChildScrollView(
                     child: Column(
                       children: [

@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:funlish_app/body.dart';
 import 'package:funlish_app/screens/onboarding.dart';
+import 'package:funlish_app/utility/databaseHandler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sizer/sizer.dart';
 import 'dart:math' as math;
@@ -22,23 +24,34 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   awaitDB();
+    awaitDB();
     // });
+  }
 
+  void awaitDB() async {
+    await openDB();
+    preferences = await SharedPreferences.getInstance();
+    chapters = await getChaptersFromDB();
+
+    setState(() {});
     Future.delayed(const Duration(seconds: 2), () async {
+      if (preferences.getBool("isDarkMode") == null) {
+        preferences.setBool("isDarkMode", false);
+      } else if (preferences.getBool("isDarkMode") == true) {
+        bodyColor = Color.fromARGB(255, 23, 16, 39);
+        fontColor = Color(0xffF9F7FF);
+      }
       Navigator.of(context).pushReplacement(CupertinoPageRoute(
           builder: (_) => Sizer(builder: (context, orientation, screenType) {
                 return (preferences.getBool("isLoggedIn") != null &&
                         preferences.getBool("isLoggedIn") == true)
-                    ? Body()
+                    ? Body(
+                        pageIndex: 0,
+                      )
                     : Onboarding();
               })));
     });
   }
-
-  // void awaitDB() async {
-  //   await openDB();
-  // }
 
   @override
   Widget build(BuildContext context) {

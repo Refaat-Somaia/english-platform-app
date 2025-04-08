@@ -1,8 +1,11 @@
+import 'package:dart_ping/dart_ping.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/mainPages/games/gameIntro.dart';
 import 'package:funlish_app/utility/global.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:lottie/lottie.dart';
 import 'package:sizer/sizer.dart';
 
@@ -27,7 +30,7 @@ class _GamesState extends State<Games> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Image.asset(
-                    "assets/images/circle-top.png",
+                    "assets/images/circle-top-right.png",
                     width: 20.w,
                   ),
                 ],
@@ -43,8 +46,8 @@ class _GamesState extends State<Games> {
                         children: [
                           buttonOfMenu(
                               const Color.fromARGB(255, 48, 79, 139),
-                              "assets/animations/lock.json",
-                              "Grammar Escape",
+                              "assets/animations/castle.json",
+                              "Castle Escape",
                               500.ms,
                               1),
                           buttonOfMenu(
@@ -83,8 +86,12 @@ class _GamesState extends State<Games> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          buttonOfMenu(fontColor, "assets/animations/dice.json",
-                              "Random", 800.ms, 5),
+                          buttonOfMenu(
+                              Color(0xff32356D),
+                              "assets/animations/dice.json",
+                              "Random",
+                              800.ms,
+                              5),
                         ],
                       ),
                     ),
@@ -102,6 +109,7 @@ class _GamesState extends State<Games> {
                       color: primaryPurple,
                       borderRadius: BorderRadius.circular(16)),
                   child: TextButton(
+                    style: buttonStyle(14),
                     onPressed: () {},
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -140,28 +148,37 @@ class _GamesState extends State<Games> {
       child: Container(
         width: 44.w,
         height: 22.h,
+        // decoration: BoxDecoration(
+        //     borderRadius: BorderRadius.circular(16),
+        //     border: Border.all(
+        //       color: fontColor.withOpacity(0.2),
+        //       width: 2,
+        //     ),
+        // color: bodyColor),
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: fontColor.withOpacity(0.2),
-              width: 2,
-            ),
-            // boxShadow: [
-            //   BoxShadow(
-            //     color: const Color.fromARGB(255, 238, 238, 238),
-            //     spreadRadius: 0.01.h,
-            //     blurRadius: 8,
-            //     offset: const Offset(0, 7),
-            //   )
-            // ],
-            color: bodyColor),
+          boxShadow: [
+            BoxShadow(
+              color: const Color.fromARGB(255, 243, 243, 243).withOpacity(
+                  preferences.getBool("isDarkMode") == true ? 0 : 0.3),
+              spreadRadius: 0.01.h,
+              blurRadius: 8,
+              offset: const Offset(0, 7),
+            )
+          ],
+          borderRadius: BorderRadius.circular(16),
+          color: preferences.getBool("isDarkMode") == true
+              ? Color.fromARGB(255, 82, 57, 141)
+              : Colors.white,
+        ),
         child: TextButton(
-          style: OutlinedButton.styleFrom(
-            padding: EdgeInsets.zero,
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(14))),
-          ),
-          onPressed: () {
+          style: buttonStyle(14),
+          onPressed: () async {
+            bool result = await InternetConnection().hasInternetAccess;
+            if (!result) {
+              showAlertModal(context, "Please check your internet connection");
+              return;
+            }
+
             switch (index) {
               case 1:
                 Navigator.push(
@@ -171,7 +188,7 @@ class _GamesState extends State<Games> {
                             gameName: text,
                             color: color,
                             text:
-                                "Each team is trapped in a virtual escape room 🏰. To escape, they must solve grammar puzzles, fix incorrect sentences, or choose the right words.",
+                                "Each player is trapped in a virtual castle 🏰. To escape, they must solve grammar puzzles, fix incorrect sentences, or choose the right words.",
                             path: path)));
                 break;
               case 2:
@@ -182,7 +199,7 @@ class _GamesState extends State<Games> {
                             gameName: text,
                             color: color,
                             text:
-                                "A grammar bomb is passed between teams ⏳. The teacher gives a sentence with a missing word. The team must fill in the blank correctly before time runs out! If they fail or take too long, they lose a life. Last team standing wins!",
+                                "A grammar bomb is passed between players ⏳. A sentence with a missing word is given. The player must fill in the blank correctly before time runs out! If they fail or take too long, they lose the game. Last player standing wins!",
                             path: path)));
 
                 break;
@@ -205,7 +222,7 @@ class _GamesState extends State<Games> {
                             gameName: text,
                             color: color,
                             text:
-                                "Each team is given scattered letters on the screen. They must rearrange them to form a word related to the weekly theme. The fastest team to solve 5 words wins!",
+                                "Each player is given scattered letters on the screen. They must rearrange them to form a word. The fastest player to solve 4 words wins!",
                             path: path)));
                 break;
               case 5:
@@ -228,7 +245,7 @@ class _GamesState extends State<Games> {
               path == 'assets/images/translate.png'
                   ? Image.asset('assets/images/translate.png', height: 12.h)
                   : Lottie.asset(path, animate: false, height: 12.h),
-              setText(text, FontWeight.w600, 14.5.sp, color)
+              setText(text, FontWeight.w600, 14.5.sp, fontColor)
             ],
           ),
         ),

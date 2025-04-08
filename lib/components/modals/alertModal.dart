@@ -12,7 +12,7 @@ void showAlertModal(BuildContext context, String msg) {
     builder: (BuildContext context) {
       return Container(
         decoration: BoxDecoration(
-            color: Colors.transparent,
+            color: bodyColor,
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16), topRight: Radius.circular(16))),
         height: 30.h,
@@ -42,7 +42,9 @@ void showAlertModal(BuildContext context, String msg) {
             SizedBox(
               height: 4.h,
             ),
-            setText(msg, FontWeight.w500, 15.sp, fontColor),
+            SizedBox(
+                width: 90.w,
+                child: setText(msg, FontWeight.w500, 15.sp, fontColor, true)),
           ],
         ),
       );

@@ -9,11 +9,16 @@ import 'package:funlish_app/components/afterGameScreens/drawScreen.dart';
 import 'package:funlish_app/components/afterGameScreens/lostScreen.dart';
 import 'package:funlish_app/components/afterGameScreens/winScreen.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
+import 'package:funlish_app/components/topNotification.dart';
 import 'package:funlish_app/model/player.dart';
+import 'package:funlish_app/model/powerUp.dart';
+import 'package:funlish_app/model/userProgress.dart';
+import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/utility/socketIoClient.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 extension Shuffle on String {
@@ -22,9 +27,8 @@ extension Shuffle on String {
 
 class Puzzlelevel extends StatefulWidget {
   final Color color;
-  final int timerDuration;
-  const Puzzlelevel(
-      {super.key, required this.color, required this.timerDuration});
+  final bool playAgain;
+  const Puzzlelevel({super.key, required this.color, required this.playAgain});
 
   @override
   State<Puzzlelevel> createState() => _PuzzlelevelState();
@@ -38,27 +42,44 @@ class _PuzzlelevelState extends State<Puzzlelevel>
   final PageController pageController = PageController();
   late AnimationController animationController;
   late SocketService socketService;
-  List<dynamic> words = [];
-  List<dynamic> description = [];
+  List<dynamic> words = [
+    "",
+    "",
+    "",
+    "",
+  ];
+  List<dynamic> description = [
+    "",
+    "",
+    "",
+    "",
+  ];
   List<String> shuffledWord = [];
   int correctAnswers = 0;
-  List<bool> hasAnswered = [];
+  List<bool> hasAnswered = [false, false, false, false];
   List<List<String?>> droppedWords = [];
   Timer timer = Timer(Duration(), () {});
   Timer timerPreMatch = Timer(Duration(), () {});
   List<Player> players = [];
   bool isLoading = true;
+  int timeDuration = 60;
   bool isTimeUp = false;
   bool isCountDown = false;
+  int extendedTimeCount = 0;
   bool isWon = false;
   bool isLost = false;
   bool isDraw = false;
+  void getPowerUps() async {
+    powerUps = await getPowerUpsOfGame('wordPuzzle');
+    setState(() {});
+  }
 
   void updateLoading() {
     animationController.reverse();
 
     Timer(Duration(milliseconds: 300), () {
       isCountDown = true;
+      playSound("audio/found.MP3");
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -81,21 +102,23 @@ class _PuzzlelevelState extends State<Puzzlelevel>
   }
 
   void addPoints(String name, String points) {
-    players.forEach((player) {
+    for (var player in players) {
       if (player.name == name) {
         setState(() {
           player.points = int.parse(points);
         });
       }
-    });
+    }
   }
 
   void hasLost() {
+    playSound("audio/lost.mp3");
     if (mounted) {
       setState(() {
         isLost = true;
       });
     }
+    timer.cancel();
   }
 
   void updatePlayers(List<Player> newPlayers) {
@@ -108,25 +131,45 @@ class _PuzzlelevelState extends State<Puzzlelevel>
 
   void addWord(List<dynamic> word1, List<dynamic> description1) {
     if (mounted) {
-      setState(() {
-        words = word1;
-        description = description1;
-        for (int i = 0; i < words.length; i++) {
-          words[i] = words[i].toString().toLowerCase();
-          droppedWords.add(List.filled(words[i].length, ""));
-          shuffledWord.add(words[i].toString().shuffled);
-          hasAnswered.add(false);
-        }
-      });
+      words = word1;
+      description = description1;
+      for (int i = 0; i < words.length; i++) {
+        words[i] = words[i].toString().toLowerCase();
+        droppedWords.add(List.filled(words[i].length, ""));
+        shuffledWord.add(words[i].toString().shuffled);
+        hasAnswered.add(false);
+      }
+      setState(() {});
     }
+  }
+
+  void hasWon() {
+    final user = Provider.of<UserProgress>(context, listen: false);
+    user.addXP(50);
+    playSound("audio/win.MP3");
+    setState(() {
+      isWon = true;
+    });
+    socketService.sendMessage(socketService.matchid, "", "IWON");
+    timer.cancel();
+  }
+
+  void hasDraw() {
+    final user = Provider.of<UserProgress>(context, listen: false);
+    user.addXP(25);
+    playSound("audio/draw.mp3");
+    setState(() {
+      isDraw = true;
+    });
+    timer.cancel();
   }
 
   void startTimer() {
     timer = Timer.periodic(Duration(seconds: 1), (time) {
-      if (time.tick <= widget.timerDuration) {
+      if (time.tick <= timeDuration) {
         if (mounted) {
           setState(() {
-            progress = (time.tick / widget.timerDuration);
+            progress = (time.tick / timeDuration);
           });
         }
       } else {
@@ -137,15 +180,11 @@ class _PuzzlelevelState extends State<Puzzlelevel>
             if (player.points > max) max = player.points;
           });
           if (max < correctAnswers) {
-            setState(() {
-              isWon = true;
-            });
-            socketService.sendMessage(socketService.matchid, "", "IWON");
+            hasWon();
+
             return;
           }
-          setState(() {
-            isDraw = true;
-          });
+          hasDraw();
         }
       }
     });
@@ -153,14 +192,19 @@ class _PuzzlelevelState extends State<Puzzlelevel>
 
   @override
   void initState() {
+    getPowerUps();
     animationController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     animationController.forward();
+    playSound("audio/searching.mp3");
+
     // TODO: implement initState
     socketService = SocketService(
         updateLoading: updateLoading,
         addAnswer: () {},
         setFirst: () {},
+        extendTimer: extendTimer,
+        friednlyBomb: () {},
         hasWon: () {},
         hasDraw: () {},
         addWord: addWord,
@@ -169,13 +213,16 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         addSentence: () {},
         addPoints: addPoints,
         showAlert: () {
+          Navigator.pop(context);
           showAlertModal(context, "Opponent has left");
+          playSound("audio/left.mp3");
         });
     super.initState();
 
-    socketService.connect();
-
-    socketService.findMatch("wordPuzzle");
+    Timer(Duration(seconds: widget.playAgain ? 1 : 0), () {
+      socketService.connect();
+      socketService.findMatch("wordPuzzle");
+    });
   }
 
   @override
@@ -184,6 +231,7 @@ class _PuzzlelevelState extends State<Puzzlelevel>
     super.dispose();
     timer.cancel();
     timerPreMatch.cancel();
+    powerUpTimer.cancel();
     socketService.disconnect();
   }
 
@@ -203,7 +251,7 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                     LoadingAnimationWidget.staggeredDotsWave(
                         color: widget.color, size: 18.w),
                     SizedBox(height: 1.h),
-                    setText("Waiting for players...", FontWeight.w600, 16.sp,
+                    setText("Looking for players...", FontWeight.w600, 16.sp,
                         fontColor),
                     SizedBox(height: 3.h),
                     Container(
@@ -245,6 +293,7 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                         ? Lostscreen(
                             color: widget.color,
                             players: players,
+                            words: words,
                             function: playAgain)
                         : isDraw
                             ? Drawscreen(
@@ -252,108 +301,293 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                                 color: widget.color,
                                 function: playAgain)
                             : Animate(
-                                child: Column(
+                                child: Stack(
                                   children: [
                                     SizedBox(
-                                      height: 6.h,
-                                    ),
-                                    CircularPercentIndicator(
-                                      radius: 6.h,
-                                      backgroundColor:
-                                          fontColor.withOpacity(0.2),
-                                      animation: true,
-                                      animateFromLastPercent: true,
-                                      curve: Curves.easeOut,
-                                      animationDuration: 400,
-                                      progressColor: progress < 0.4
-                                          ? const Color.fromARGB(
-                                              255, 68, 186, 129)
-                                          : progress < 0.7
-                                              ? Colors.orangeAccent
-                                              : Colors.redAccent,
-                                      percent: progress,
-                                      center: setText(
-                                          (widget.timerDuration - timer.tick)
-                                              .toString(),
-                                          FontWeight.bold,
-                                          16.sp,
-                                          fontColor.withOpacity(0.8),
-                                          true),
-                                    ),
-                                    SingleChildScrollView(
-                                      child: SizedBox(
-                                        width: 100.w,
-                                        height: 72.h,
-                                        child: PageView(
-                                          controller: pageController,
-                                          children: [
-                                            for (int i = 0;
-                                                i < words.length;
-                                                i++)
-                                              WordPage(i),
-                                          ],
-                                          onPageChanged: (value) {
-                                            setState(() {
-                                              activeIndex.value = value;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    ValueListenableBuilder<int>(
-                                      valueListenable: activeIndex,
-                                      builder: (context, value, child) {
-                                        return Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: List.generate(
-                                            words.length,
-                                            (index) => Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 1.w),
-                                              child: AnimatedContainer(
-                                                duration: const Duration(
-                                                    milliseconds: 300),
-                                                curve: Curves.easeOut,
-                                                width: 5.5.w,
-                                                height: 5.5.w,
-                                                decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                        color: hasAnswered[
-                                                                index]
-                                                            ? const Color
-                                                                .fromARGB(255,
-                                                                68, 186, 129)
-                                                            : value == index
-                                                                ? fontColor
-                                                                : fontColor
-                                                                    .withOpacity(
-                                                                        0.2),
-                                                        width: 2)),
-                                                child: Center(
-                                                  child: setText(
-                                                      "${index + 1}",
-                                                      FontWeight.w600,
-                                                      13.sp,
-                                                      hasAnswered[index]
-                                                          ? const Color
-                                                              .fromARGB(
-                                                              255, 68, 186, 129)
-                                                          : value == index ||
-                                                                  hasAnswered[
-                                                                      index]
-                                                              ? fontColor
-                                                              : fontColor
-                                                                  .withOpacity(
-                                                                      0.2)),
-                                                ),
+                                      width: 100.w,
+                                      child: Column(
+                                        children: [
+                                          SizedBox(
+                                            height: 6.h,
+                                          ),
+                                          CircularPercentIndicator(
+                                            radius: 6.h,
+                                            backgroundColor:
+                                                fontColor.withOpacity(0.2),
+                                            animation: true,
+                                            animateFromLastPercent: true,
+                                            curve: Curves.easeOut,
+                                            animationDuration: 400,
+                                            progressColor: progress < 0.4
+                                                ? const Color.fromARGB(
+                                                    255, 68, 186, 129)
+                                                : progress < 0.7
+                                                    ? Colors.orangeAccent
+                                                    : Colors.redAccent,
+                                            percent: progress,
+                                            center: setText(
+                                                (timeDuration - timer.tick)
+                                                    .toString(),
+                                                FontWeight.bold,
+                                                16.sp,
+                                                fontColor.withOpacity(0.8),
+                                                true),
+                                          ),
+                                          SingleChildScrollView(
+                                            child: SizedBox(
+                                              width: 100.w,
+                                              height: 72.h,
+                                              child: PageView(
+                                                controller: pageController,
+                                                children: [
+                                                  for (int i = 0;
+                                                      i < words.length;
+                                                      i++)
+                                                    WordPage(i),
+                                                ],
+                                                onPageChanged: (value) {
+                                                  setState(() {
+                                                    activeIndex.value = value;
+                                                  });
+                                                },
                                               ),
                                             ),
                                           ),
-                                        );
-                                      },
+                                          ValueListenableBuilder<int>(
+                                            valueListenable: activeIndex,
+                                            builder: (context, value, child) {
+                                              return Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: List.generate(
+                                                  words.length,
+                                                  (index) => Padding(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal: 1.w),
+                                                    child: AnimatedContainer(
+                                                      duration: const Duration(
+                                                          milliseconds: 300),
+                                                      curve: Curves.easeOut,
+                                                      width: 5.5.w,
+                                                      height: 5.5.w,
+                                                      decoration: BoxDecoration(
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          border: Border.all(
+                                                              color: hasAnswered[
+                                                                      index]
+                                                                  ? const Color
+                                                                      .fromARGB(
+                                                                      255,
+                                                                      68,
+                                                                      186,
+                                                                      129)
+                                                                  : value ==
+                                                                          index
+                                                                      ? fontColor
+                                                                      : fontColor
+                                                                          .withOpacity(
+                                                                              0.2),
+                                                              width: 2)),
+                                                      child: Center(
+                                                        child: setText(
+                                                            "${index + 1}",
+                                                            FontWeight.w600,
+                                                            13.sp,
+                                                            value == index ||
+                                                                    hasAnswered[
+                                                                        index]
+                                                                ? fontColor
+                                                                : hasAnswered[
+                                                                        index]
+                                                                    ? const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        68,
+                                                                        186,
+                                                                        129)
+                                                                    : fontColor
+                                                                        .withOpacity(
+                                                                            0.2)),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                    if (isVisible)
+                                      GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _width = 12.w;
+                                              _height = 12.w;
+                                              isVisible = false;
+                                              bgOpacity = 0;
+                                            });
+                                          },
+                                          child: AnimatedOpacity(
+                                            opacity: bgOpacity,
+                                            duration:
+                                                Duration(milliseconds: 200),
+                                            child: Container(
+                                              width: 100.w,
+                                              height: 100.h,
+                                              color:
+                                                  Colors.black.withOpacity(0.3),
+                                            ),
+                                          )),
+                                    Positioned(
+                                        right: 3.w,
+                                        bottom: 2.5.h,
+                                        child: AnimatedContainer(
+                                          duration: Duration(milliseconds: 300),
+                                          padding: EdgeInsets.all(
+                                              _width > 12.w ? 15 : 0),
+                                          constraints: BoxConstraints(
+                                              minHeight: _height,
+                                              minWidth: _width),
+                                          curve: Curves.ease,
+                                          decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12)),
+                                          child: TextButton(
+                                            style: buttonStyle(12),
+                                            onPressed: () {
+                                              if (_width == 12.w) {
+                                                setState(() {
+                                                  _width = 70.w;
+
+                                                  _height = 20.h;
+                                                });
+
+                                                Timer(
+                                                    Duration(milliseconds: 150),
+                                                    () {
+                                                  setState(() {
+                                                    isVisible = true;
+                                                  });
+                                                });
+                                                Timer(
+                                                    Duration(milliseconds: 200),
+                                                    () {
+                                                  setState(() {
+                                                    bgOpacity = 1;
+                                                  });
+                                                });
+
+                                                return;
+                                              }
+                                              closeBg();
+                                            },
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                if (_width < 13.w)
+                                                  Animate(
+                                                    child: Image.asset(
+                                                      "assets/images/power.png",
+                                                      width: 9.w,
+                                                    ),
+                                                  ).fadeIn(),
+                                                if (isVisible)
+                                                  Animate(
+                                                    child: Wrap(
+                                                      alignment:
+                                                          WrapAlignment.center,
+                                                      spacing: 7.w,
+                                                      runSpacing: 2.h,
+                                                      children: [
+                                                        for (int i = 0;
+                                                            i < powerUps.length;
+                                                            i++)
+                                                          Column(
+                                                            children: [
+                                                              Container(
+                                                                width: 17.w,
+                                                                height: 17.w,
+                                                                decoration: BoxDecoration(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            16),
+                                                                    color: const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        244,
+                                                                        244,
+                                                                        244)),
+                                                                child:
+                                                                    TextButton(
+                                                                        style: buttonStyle(
+                                                                            12),
+                                                                        onPressed:
+                                                                            () {
+                                                                          switch (
+                                                                              powerUps[i].name) {
+                                                                            case "Extended Time":
+                                                                              if (extendedTimeCount >= 3) {
+                                                                                return;
+                                                                              }
+
+                                                                              extendTimer();
+                                                                              socketService.sendMessage(socketService.matchid, "", "EXTENDTIMER");
+                                                                              closeBg();
+                                                                              break;
+
+                                                                            default:
+                                                                              break;
+                                                                          }
+                                                                        },
+                                                                        child: Image
+                                                                            .asset(
+                                                                          powerUps[i]
+                                                                              .iconPath,
+                                                                          height:
+                                                                              12.w,
+                                                                        )),
+                                                              ),
+                                                              SizedBox(
+                                                                  height: 1.h),
+                                                              setText(
+                                                                  powerUps[i]
+                                                                      .count
+                                                                      .toString(),
+                                                                  FontWeight
+                                                                      .bold,
+                                                                  14.sp,
+                                                                  fontColor)
+                                                            ],
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ).fadeIn(),
+                                              ],
+                                            ),
+                                          ),
+                                        )),
+                                    Animate(
+                                            child: Positioned(
+                                      left: 4.w,
+                                      top: 2.h,
+                                      child: Topnotification(
+                                        powerUp: notificationPowerUp,
+                                        sender: sender,
+                                      ),
+                                    ))
+                                        .slideY(
+                                            begin: -0.3,
+                                            end: showNotification ? 0 : -3,
+                                            curve: Curves.ease,
+                                            duration: showNotification
+                                                ? 400.ms
+                                                : 700.ms)
+                                        .fadeIn()
                                   ],
                                 ),
                               )
@@ -383,12 +617,11 @@ class _PuzzlelevelState extends State<Puzzlelevel>
   }
 
   playAgain() {
-    socketService.connect();
     Navigator.pushReplacement(
         context,
         CupertinoPageRoute(
             builder: (BuildContext context) =>
-                Puzzlelevel(color: widget.color, timerDuration: 60)));
+                Puzzlelevel(color: widget.color, playAgain: true)));
   }
 
   Widget WordPage(int index) {
@@ -417,12 +650,14 @@ class _PuzzlelevelState extends State<Puzzlelevel>
               words[index].length,
               (indx) => DragTarget<String>(
                 onAccept: (receivedWord) {
+                  playSound('audio/click.mp3');
                   if (mounted) {
                     setState(() {
                       droppedWords[index][indx] = receivedWord;
                     });
                     if (droppedWords[index].join() == words[index] &&
                         !hasAnswered[index]) {
+                      playSound("audio/found.MP3");
                       setState(() {
                         correctAnswers++;
                         hasAnswered[index] = true;
@@ -430,6 +665,8 @@ class _PuzzlelevelState extends State<Puzzlelevel>
 
                       socketService.sendMessage(socketService.matchid,
                           correctAnswers.toString(), "points");
+                      addPoints(preferences.getString("userName")!,
+                          correctAnswers.toString());
                       if (activeIndex.value < words.length - 1) {
                         pageController.nextPage(
                           duration: const Duration(milliseconds: 400),
@@ -442,19 +679,16 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                     }
                     if (correctAnswers == words.length) {
                       int max = 0;
-                      players.forEach((player) {
-                        if (player.points > max) max = player.points;
-                      });
+                      for (var player in players) {
+                        if (player.points > max &&
+                            player.name != preferences.getString("userName")) {
+                          max = player.points;
+                        }
+                      }
                       if (max < correctAnswers) {
-                        setState(() {
-                          isWon = true;
-                        });
-                        socketService.sendMessage(
-                            socketService.matchid, "", "IWON");
+                        hasWon();
                       } else {
-                        setState(() {
-                          isDraw = true;
-                        });
+                        hasDraw();
                       }
                     }
                   }
@@ -545,5 +779,104 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         ),
       ],
     );
+  }
+
+  List<PowerUp> powerUps = [];
+  double _width = 12.w;
+  double bgOpacity = 0;
+  double _height = 12.w;
+  PowerUp notificationPowerUp = PowerUp(
+      id: "id",
+      price: 0,
+      count: 0,
+      iconPath: "",
+      description: "",
+      game: "",
+      name: "");
+
+  bool showNotification = false;
+  String sender = "";
+  Timer powerUpTimer = Timer(Duration(), () {});
+
+  bool isVisible = false;
+  void winCondition() {
+    socketService.sendMessage(socketService.matchid, "", "IWON");
+    hasWon();
+    timer.cancel();
+  }
+
+  extendTimer([sender1]) {
+    powerUpTimer.cancel();
+    if (sender1 != null) {
+      sender = sender1.toString();
+      playSound('audio/enemyPowerUp.mp3');
+    } else {
+      sender = preferences.getString("userName")!;
+      playSound('audio/powerUp.mp3');
+    }
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Extended Time") {
+        setState(() {
+          notificationPowerUp = powerUp;
+          showNotification = true;
+        });
+      }
+    }
+    powerUpTimer = Timer(Duration(seconds: 6), () {
+      setState(() {
+        showNotification = false;
+      });
+    });
+
+    setState(() {
+      timeDuration += 30;
+      extendedTimeCount++;
+    });
+  }
+
+  wordHint([sender1]) {
+    powerUpTimer.cancel();
+
+    if (sender1 != null) {
+      sender = sender1.toString();
+      playSound('audio/enemyPowerUp.mp3');
+    } else {
+      sender = preferences.getString("userName")!;
+      playSound('audio/powerUp.mp3');
+    }
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Puzzle Hint") {
+        setState(() {
+          notificationPowerUp = powerUp;
+          showNotification = true;
+        });
+      }
+    }
+    powerUpTimer = Timer(Duration(seconds: 6), () {
+      setState(() {
+        showNotification = false;
+      });
+    });
+    int length = (droppedWords[activeIndex.value].length / 2).ceil();
+    int corrected = 0;
+
+    for (int i = 0; i < droppedWords[activeIndex.value].length; i++) {
+      if (droppedWords[activeIndex.value][i] != words[activeIndex.value][i] &&
+          corrected <= length) {
+        droppedWords[activeIndex.value][i] = words[activeIndex.value][i];
+        corrected++;
+      }
+    }
+    setState(() {});
+    return;
+  }
+
+  closeBg() {
+    setState(() {
+      _width = 12.w;
+      _height = 12.w;
+      bgOpacity = 0;
+      isVisible = false;
+    });
   }
 }

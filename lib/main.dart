@@ -3,12 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/screens/splash.dart';
 import 'package:funlish_app/utility/global.dart';
-import 'package:funlish_app/utility/noti_service.dart';
+
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
-import 'package:funlish_app/utility/databaseHandler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,14 +14,7 @@ void main() async {
     statusBarColor: Colors.black,
   ));
 
-  await openDB();
-  preferences = await SharedPreferences.getInstance();
-  chapters = await getChaptersFromDB();
   UserProgress user = await UserProgress.loadProgress();
-
-  if (preferences.getInt("userPoints") == null) {
-    preferences.setInt("userPoints", 0);
-  }
 
   runApp(
     ChangeNotifierProvider(

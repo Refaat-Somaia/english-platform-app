@@ -11,7 +11,8 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:sizer/sizer.dart';
 
 class Body extends StatefulWidget {
-  const Body({super.key});
+  final int pageIndex;
+  const Body({super.key, required this.pageIndex});
 
   @override
   State<Body> createState() => _BodyState();
@@ -19,14 +20,24 @@ class Body extends StatefulWidget {
 
 class _BodyState extends State<Body> {
   int activeIndex = 0;
-  List<Widget> pages = [Home(), Chapters(), Games(), Threads()];
+  List<Widget> pages = [];
   bool isLoading = true;
+
+  Color textColor = Color(0x00000);
 
   @override
   void initState() {
     super.initState();
-
+    activeIndex = widget.pageIndex;
+    pages = [Home(update: updateState), Chapters(), Games(), Threads()];
+    textColor = preferences.getBool("isDarkMode")! ? fontColor : bodyColor;
     WidgetsBinding.instance.addPostFrameCallback((_) {});
+  }
+
+  void updateState() {
+    textColor = preferences.getBool("isDarkMode")! ? fontColor : bodyColor;
+
+    setState(() {});
   }
 
   @override
@@ -49,13 +60,13 @@ class _BodyState extends State<Body> {
                 textStyle: TextStyle(
                     fontSize: 14.sp,
                     fontFamily: 'magnet',
-                    color: bodyColor,
+                    color: textColor,
                     fontWeight: FontWeight.w600),
                 iconColor: fontColor.withOpacity(0.5),
-                textColor: bodyColor,
+                textColor: textColor,
                 backgroundColor: primaryPurple,
                 haptic: true,
-                iconActiveColor: bodyColor,
+                iconActiveColor: textColor,
                 onPressed: () {
                   setState(() {
                     activeIndex = 0;
@@ -70,13 +81,13 @@ class _BodyState extends State<Body> {
                 textStyle: TextStyle(
                     fontSize: 14.sp,
                     fontFamily: 'magnet',
-                    color: bodyColor,
+                    color: textColor,
                     fontWeight: FontWeight.w600),
                 iconColor: fontColor.withOpacity(0.5),
-                textColor: bodyColor,
+                textColor: textColor,
                 backgroundColor: primaryPurple,
                 haptic: true,
-                iconActiveColor: bodyColor,
+                iconActiveColor: textColor,
                 onPressed: () {
                   setState(() {
                     activeIndex = 1;
@@ -91,13 +102,13 @@ class _BodyState extends State<Body> {
                 textStyle: TextStyle(
                     fontSize: 14.sp,
                     fontFamily: 'magnet',
-                    color: bodyColor,
+                    color: textColor,
                     fontWeight: FontWeight.w600),
                 iconColor: fontColor.withOpacity(0.5),
-                textColor: bodyColor,
+                textColor: textColor,
                 backgroundColor: primaryPurple,
                 haptic: true,
-                iconActiveColor: bodyColor,
+                iconActiveColor: textColor,
                 onPressed: () {
                   setState(() {
                     activeIndex = 2;
@@ -112,13 +123,13 @@ class _BodyState extends State<Body> {
                 textStyle: TextStyle(
                     fontSize: 14.sp,
                     fontFamily: 'magnet',
-                    color: bodyColor,
+                    color: textColor,
                     fontWeight: FontWeight.w600),
                 iconColor: fontColor.withOpacity(0.5),
-                textColor: bodyColor,
+                textColor: textColor,
                 backgroundColor: primaryPurple,
                 haptic: true,
-                iconActiveColor: bodyColor,
+                iconActiveColor: textColor,
                 onPressed: () {
                   setState(() {
                     activeIndex = 3;

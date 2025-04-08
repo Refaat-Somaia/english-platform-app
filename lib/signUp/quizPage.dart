@@ -69,6 +69,8 @@ class _QuizpageState extends State<Quizpage>
       QuestionList questionList =
           QuestionList.fromJson(json.decode(response.body));
       questionList.data.forEach((question) {
+        print(question);
+
         switch (question.difficulty) {
           case "beginner":
             beginnerQuestions.add(question);
@@ -83,10 +85,13 @@ class _QuizpageState extends State<Quizpage>
             break;
         }
       });
+      print("so far so good");
+
       setState(() {
         questions = beginnerQuestions;
         currentQuestion = questions[0];
       });
+      print("so far so good");
 
       return;
     }
@@ -292,7 +297,9 @@ class _QuizpageState extends State<Quizpage>
                                 print(
                                     "Beginner Progress: ${beginnerProgress.toStringAsFixed(2)}%");
                                 if (beginnerProgress >= 15) {
-                                  print("Moved to Intermediate");
+                                  showAlertModal(
+                                      context, "Moved to Intermediate");
+
                                   setState(() {
                                     questions = intermediateQuestions;
                                     currentDifficultyLevel = 1;
@@ -309,7 +316,8 @@ class _QuizpageState extends State<Quizpage>
                                 print(
                                     "Intermediate Progress: ${intermediateProgress.toStringAsFixed(2)}%");
                                 if (intermediateProgress >= 35) {
-                                  print("Moved to Advanced");
+                                  showAlertModal(context, "Moved to advanced");
+
                                   setState(() {
                                     questions = advancedQuestions;
                                     currentDifficultyLevel = 2;
@@ -317,7 +325,7 @@ class _QuizpageState extends State<Quizpage>
                                   });
                                 }
                               } else if (currentDifficultyLevel == 2) {
-                                advancedProgress += (advancedThreshold / 4);
+                                advancedProgress += (advancedThreshold / 2);
                                 advancedProgress =
                                     min(advancedProgress, advancedThreshold);
                                 advancedDone++;
@@ -345,13 +353,15 @@ class _QuizpageState extends State<Quizpage>
                                                 intermediateAttempts) *
                                             intermeiatePenaltyFactor);
 
-                                if (intermediateProgress < 0 &&
+                                if (intermediateProgress <= 0 &&
                                     beginnerDone < beginnerQuestions.length) {
-                                  print("Dropped back to Beginner");
+                                  showAlertModal(
+                                      context, "Dropped back to Beginner");
+
                                   setState(() {
                                     questions = beginnerQuestions;
                                     currentDifficultyLevel = 0;
-                                    pageController.jumpToPage(0);
+                                    // pageController.jumpToPage(0);
                                   });
                                 }
                               } else if (currentDifficultyLevel == 2) {
@@ -365,11 +375,12 @@ class _QuizpageState extends State<Quizpage>
                                 if (advancedProgress < 0 &&
                                     intermediateDone <
                                         intermediateQuestions.length) {
-                                  print("Dropped back to Intermediate");
+                                  showAlertModal(
+                                      context, "Dropped back to Intermediate");
                                   setState(() {
                                     questions = intermediateQuestions;
                                     currentDifficultyLevel = 1;
-                                    pageController.jumpToPage(0);
+                                    // pageController.jumpToPage(0);
                                   });
                                 }
                               }
@@ -387,7 +398,8 @@ class _QuizpageState extends State<Quizpage>
                             if (beginnerDone >= beginnerQuestions.length ||
                                 intermediateDone >=
                                     intermediateQuestions.length ||
-                                advancedDone >= advancedQuestions.length - 1) {
+                                advancedDone >= advancedQuestions.length - 1 ||
+                                totalProgress >= 100) {
                               print(
                                   "All questions completed! Navigating to next page...");
                               await signUserUp();
@@ -422,6 +434,7 @@ class _QuizpageState extends State<Quizpage>
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
+      print(jsonDecode(response.body)["data"]["id"]);
       int detailsId = jsonDecode(response.body)["data"]["id"];
 
       response = await http.post(
@@ -436,10 +449,13 @@ class _QuizpageState extends State<Quizpage>
         preferences.setBool("isLoggedIn", true);
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => Body()),
+          MaterialPageRoute(
+              builder: (context) => Body(
+                    pageIndex: 0,
+                  )),
           (route) => false,
         );
-        showAlertModal(context, "current level: $currentDifficultyLevel");
+        showAlertModal(context, "current level: $totalProgress");
       }
     } else {
       print("Error ${response.statusCode}: ${response.body}");

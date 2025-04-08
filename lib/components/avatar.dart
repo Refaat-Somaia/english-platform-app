@@ -21,12 +21,18 @@ class _AvatarState extends State<Avatar> {
     'assets/images/shop/characters/penguin-green.png',
     'assets/images/shop/characters/penguin-blue.png',
     'assets/images/shop/characters/penguin-yellow.png',
+    'assets/images/shop/characters/penguin-grey.png',
+    'assets/images/shop/characters/penguin-red.png',
+    'assets/images/shop/characters/penguin-black.png',
     'assets/images/shop/characters/hamter-purple.png',
     'assets/images/shop/characters/hamter-blue.png',
     'assets/images/shop/characters/hamter-yellow.png',
+    'assets/images/shop/characters/hamter-red.png',
     'assets/images/shop/characters/hamter-green.png',
+    'assets/images/shop/characters/hamter-pink.png',
   ];
   List<String> hatsPaths = [
+    'assets/images/shop/hats/none.png',
     'assets/images/shop/hats/winter-1.png',
     'assets/images/shop/hats/hat-1.png',
     'assets/images/shop/hats/hat-2.png',

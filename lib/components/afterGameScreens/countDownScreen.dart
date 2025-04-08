@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:funlish_app/components/avatar.dart';
 import 'package:funlish_app/model/player.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:lottie/lottie.dart';
@@ -53,10 +54,11 @@ class _CountdownscreenState extends State<Countdownscreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Image.asset(
-                              'assets/images/avatar.png',
-                              width: 18.w,
-                            ),
+                            Avatar(
+                                characterIndex:
+                                    widget.players[index].characterIndex,
+                                hatIndex: widget.players[index].hatIndex,
+                                width: 18.w),
                             SizedBox(
                               height: 1.h,
                             ),
@@ -65,6 +67,11 @@ class _CountdownscreenState extends State<Countdownscreen> {
                                 FontWeight.w600,
                                 14.5.sp,
                                 fontColor.withOpacity(0.8)),
+                            setText(
+                                "Level: ${widget.players[index].level}",
+                                FontWeight.w600,
+                                13.sp,
+                                fontColor.withOpacity(0.5)),
                             // setText(
                             //     "Level: 1",
                             //     FontWeight.w600,

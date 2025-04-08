@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/mainPages/flashCards.dart';
 import 'package:funlish_app/mainPages/menu/stats/learnedWordsPage.dart';
 import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/utility/custom_icons_icons.dart';
@@ -21,6 +22,7 @@ class _StatsState extends State<Stats> {
   List<Learnedword> listenWords = [];
 
   List<Learnedword> diffWords = [];
+  List<Learnedword> grammarWords = [];
 
   @override
   void initState() {
@@ -36,6 +38,8 @@ class _StatsState extends State<Stats> {
     for (var word in words) {
       if (word.type == "listen") {
         listenWords.add(word);
+      } else if (word.type == "grammar") {
+        grammarWords.add(word);
       } else {
         diffWords.add(word);
       }
@@ -47,112 +51,107 @@ class _StatsState extends State<Stats> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bodyColor,
-      body: Container(
-        height: double.infinity,
-        child: Column(
-          // alignment: Alignment.center,
-          children: [
-            SizedBox(
-              height: 2.5.h,
-            ),
-            SizedBox(
-              width: 92.w,
-              child: Row(
-                children: [
-                  Container(
-                    width: 12.w,
-                    height: 12.w,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        // border: Border.all(
-                        //     width: 1.5, color: fontColor.withOpacity(0.2))
-                        color: primaryPurple),
-                    child: IconButton(
-                        style: IconButton.styleFrom(padding: EdgeInsets.zero),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: Icon(
-                          Icons.arrow_back_rounded,
-                          size: 7.w,
-                          color: Colors.white,
-                        )),
-                  ),
-                ],
+      body: SizedBox(
+          width: 100.w,
+          height: 100.h,
+          child: Stack(alignment: Alignment.center, children: [
+            Positioned(
+              left: 4.w,
+              top: 3.h,
+              child: Container(
+                width: 12.w,
+                height: 12.w,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    // border: Border.all(
+                    //     width: 1.5, color: fontColor.withOpacity(0.2))
+                    color: primaryPurple),
+                child: IconButton(
+                    style: IconButton.styleFrom(padding: EdgeInsets.zero),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      size: 7.w,
+                      color: Colors.white,
+                    )),
               ),
             ),
-            SizedBox(
-              height: 1.h,
-            ),
-            SizedBox(
-              height: 90.h,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 2.h,
-                    ),
-                    SizedBox(
-                        width: 90.w,
-                        child: setText(
-                            "Here is a summary of your learning journy, words you learned, how you learend them and more.",
-                            FontWeight.w500,
-                            14.sp,
-                            fontColor.withOpacity(0.7),
-                            true)),
-                    SizedBox(
-                      height: 3.h,
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 5.w),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Column(
+            Column(
+              children: [
+                SizedBox(
+                  height: 4.5.h,
+                ),
+                setText("Review", FontWeight.w600, 17.sp, fontColor),
+                SizedBox(
+                  height: 7.h,
+                ),
+                SizedBox(
+                  height: 84.h,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 5.w),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              buttonOfMenu(
-                                  primaryPurple,
-                                  "By meaning",
-                                  FontAwesomeIcons.file,
-                                  500.ms,
-                                  0,
-                                  diffWords.length),
-                              buttonOfMenu(
-                                  primaryBlue,
-                                  "By listening",
-                                  Icons.headphones_rounded,
-                                  600.ms,
-                                  1,
-                                  listenWords.length),
-                              buttonOfMenu(primaryPurple, "Threads",
-                                  FontAwesomeIcons.podcast, 700.ms, 2),
-                              SizedBox(
-                                height: 3.h,
+                              Column(
+                                children: [
+                                  buttonOfMenu(
+                                      primaryPurple,
+                                      "By meaning",
+                                      FontAwesomeIcons.file,
+                                      500.ms,
+                                      0,
+                                      diffWords.length),
+                                  buttonOfMenu(
+                                      primaryBlue,
+                                      "By listening",
+                                      Icons.headphones_rounded,
+                                      600.ms,
+                                      1,
+                                      listenWords.length),
+                                  buttonOfMenu(primaryPurple, "Threads",
+                                      FontAwesomeIcons.podcast, 700.ms, 2),
+                                  SizedBox(
+                                    height: 3.h,
+                                  ),
+                                ],
                               ),
+                              Column(
+                                children: [
+                                  buttonOfMenu(
+                                      primaryBlue,
+                                      "Flash cards",
+                                      FontAwesomeIcons.idCardClip,
+                                      700.ms,
+                                      3,
+                                      "none"),
+                                  buttonOfMenu(
+                                      primaryPurple,
+                                      "Grammar",
+                                      FontAwesomeIcons.language,
+                                      900.ms,
+                                      4,
+                                      grammarWords.length),
+
+                                  // SizedBox(
+                                  //   height: 20.h,
+                                  // ),
+                                ],
+                              )
                             ],
                           ),
-                          Column(
-                            children: [
-                              buttonOfMenu(primaryBlue, "Daily challenges",
-                                  Icons.schedule, 700.ms, 3),
-                              buttonOfMenu(primaryPurple, "My level",
-                                  FontAwesomeIcons.barsProgress, 900.ms, 4),
-
-                              // SizedBox(
-                              //   height: 20.h,
-                              // ),
-                            ],
-                          )
-                        ],
-                      ),
-                    )
-                  ],
+                        )
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ])),
     );
   }
 
@@ -174,6 +173,7 @@ class _StatsState extends State<Stats> {
           onPressed: () {
             switch (index) {
               case 0:
+                // diffWords.shuffle();
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
@@ -184,6 +184,7 @@ class _StatsState extends State<Stats> {
                 );
                 break;
               case 1:
+                // listenWords.shuffle();
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
@@ -196,8 +197,25 @@ class _StatsState extends State<Stats> {
               case 2:
                 break;
               case 3:
+                List<Learnedword> words = diffWords + listenWords;
+                words.shuffle();
+                setState(() {});
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                      builder: (BuildContext context) => FlashcardsPage(
+                            word: words,
+                          )),
+                );
                 break;
               case 4:
+                Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                        builder: (BuildContext context) => Learnedwordspage(
+                              type: "grammar",
+                              words: grammarWords,
+                            )));
                 break;
               default:
                 break;
@@ -228,8 +246,9 @@ class _StatsState extends State<Stats> {
                     fit: BoxFit.scaleDown,
                     child: setText(text, FontWeight.w600, 15.sp, fontColor)),
               ),
-              setText("${count ?? "2"} words", FontWeight.w600, 13.sp,
-                  fontColor.withOpacity(0.5))
+              if (count != "none")
+                setText("${count ?? "2"} words", FontWeight.w600, 13.sp,
+                    fontColor.withOpacity(0.5))
             ],
           ),
         ),

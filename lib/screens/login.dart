@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/body.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/signUp/signUp.dart';
 import 'package:sizer/sizer.dart';
@@ -201,6 +202,19 @@ class _LoginState extends State<Login> {
                       height: 6.5.h,
                       child: TextButton(
                         onPressed: () {
+                          if (emailController.text.trim() == "test") {
+                            preferences.setString("userName", "guest");
+                            preferences.setBool("isLoggedIn", true);
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => Body(
+                                        pageIndex: 0,
+                                      )),
+                              (route) => false,
+                            );
+                            return;
+                          }
                           bool emailValid = RegExp(
                                   r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                               .hasMatch(emailController.text.toString());

@@ -77,7 +77,7 @@ class _AccountState extends State<Account> {
                       //     width: 1.5, color: fontColor.withOpacity(0.2))
                       color: primaryPurple),
                   child: IconButton(
-                      style: IconButton.styleFrom(padding: EdgeInsets.zero),
+                      style: buttonStyle(16),
                       onPressed: () {
                         Navigator.pop(context);
                       },
@@ -346,8 +346,7 @@ class _AccountState extends State<Account> {
                                   //     width: 1.5, color: fontColor.withOpacity(0.2))
                                   color: primaryPurple.withOpacity(0.2)),
                               child: IconButton(
-                                  style: IconButton.styleFrom(
-                                      padding: EdgeInsets.zero),
+                                  style: buttonStyle(16),
                                   onPressed: () {
                                     showPasswordModal();
                                   },
@@ -373,8 +372,7 @@ class _AccountState extends State<Account> {
                                   //     width: 1.5, color: fontColor.withOpacity(0.2))
                                   color: primaryPurple.withOpacity(0.2)),
                               child: IconButton(
-                                  style: IconButton.styleFrom(
-                                      padding: EdgeInsets.zero),
+                                  style: buttonStyle(16),
                                   onPressed: () {},
                                   icon: Icon(
                                     FontAwesomeIcons.share,
@@ -398,11 +396,15 @@ class _AccountState extends State<Account> {
                                   //     width: 1.5, color: fontColor.withOpacity(0.2))
                                   color: primaryPurple.withOpacity(0.2)),
                               child: IconButton(
-                                  style: IconButton.styleFrom(
-                                      padding: EdgeInsets.zero),
+                                  style: buttonStyle(16),
                                   onPressed: () {
-                                    preferences.setBool("isLoggedIn", false);
-                                    preferences.setInt("userPoints", 0);
+                                    user.characterIndex = 0;
+                                    user.level = 1;
+                                    user.points = 0;
+                                    user.xp = 0;
+                                    user.hatIndex = 0;
+
+                                    preferences.clear();
                                     Navigator.pushAndRemoveUntil(
                                       context,
                                       CupertinoPageRoute(
@@ -467,7 +469,7 @@ class _AccountState extends State<Account> {
                             context, "Account updated Succefully!");
                         updateIsEditting();
                       },
-                      style: TextButton.styleFrom(padding: EdgeInsets.all(0)),
+                      style: buttonStyle(16),
                       child:
                           setText("Save", FontWeight.w600, 15.sp, Colors.white),
                     ),
@@ -615,7 +617,7 @@ class _AccountState extends State<Account> {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(24),
                             color: (passwordEditController.text ==
                                     passwordController.text)
                                 ? primaryPurple
@@ -632,8 +634,7 @@ class _AccountState extends State<Account> {
                               return;
                             }
                           },
-                          style:
-                              TextButton.styleFrom(padding: EdgeInsets.all(0)),
+                          style: buttonStyle(24),
                           child: setText(
                               "Enter", FontWeight.w600, 15.sp, Colors.white),
                         ),
@@ -643,8 +644,7 @@ class _AccountState extends State<Account> {
                 ),
               ),
             )
-                .scaleXY(
-                    begin: 1.2, end: 1, curve: Curves.easeOut, duration: 300.ms)
+                .slideY(begin: .1, end: 0, curve: Curves.ease, duration: 400.ms)
                 .fadeIn();
           });
         });
