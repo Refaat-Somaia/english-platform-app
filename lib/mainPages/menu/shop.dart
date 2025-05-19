@@ -28,6 +28,11 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
     'assets/images/shop/characters/penguin-grey.png',
     'assets/images/shop/characters/penguin-red.png',
     'assets/images/shop/characters/penguin-black.png',
+    'assets/images/shop/characters/wolf-blue.png',
+    'assets/images/shop/characters/wolf-orange.png',
+    'assets/images/shop/characters/wolf-pink.png',
+    'assets/images/shop/characters/rabit-grey.png',
+    'assets/images/shop/characters/rabit-pink.png',
     'assets/images/shop/characters/hamter-purple.png',
     'assets/images/shop/characters/hamter-blue.png',
     'assets/images/shop/characters/hamter-yellow.png',
@@ -41,6 +46,9 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
     'assets/images/shop/hats/hat-1.png',
     'assets/images/shop/hats/hat-2.png',
     'assets/images/shop/hats/hat-3.png',
+    'assets/images/shop/hats/hat-6.png',
+    'assets/images/shop/hats/hat-7.png',
+    'assets/images/shop/hats/hat-8.png',
     'assets/images/shop/hats/hat-4.png',
     'assets/images/shop/hats/hat-5.png',
   ];
@@ -57,9 +65,9 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
   }
 
   bool isLoading = true;
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getPowerUps();
     animationController =
@@ -68,14 +76,47 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     animationController.dispose();
+  }
+
+  List<int> sortedCharacters = [];
+  List<int> sortedHats = [];
+
+  void sortLists() {
+    final user = Provider.of<UserProgress>(context, listen: false);
+    // user.addXP(10000);
+    // Sort characters - owned first
+    sortedCharacters = [];
+    List<int> ownedCharacters =
+        user.charactersList.map((e) => int.parse(e)).toList();
+    List<int> unownedCharacters =
+        List.generate(charctersPaths.length, (index) => index)
+            .where((i) => !ownedCharacters.contains(i))
+            .toList();
+
+    sortedCharacters.addAll(ownedCharacters);
+    sortedCharacters.addAll(unownedCharacters);
+
+    // Sort hats - owned first
+    sortedHats = [];
+    List<int> ownedHats = user.hatsList.map((e) => int.parse(e)).toList();
+    List<int> unownedHats = List.generate(hatsPaths.length, (index) => index)
+        .where((i) => !ownedHats.contains(i))
+        .toList();
+
+    sortedHats.addAll(ownedHats);
+    sortedHats.addAll(unownedHats);
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProgress>(context);
+    if (sortedCharacters.isEmpty || sortedHats.isEmpty) {
+      sortLists();
+    }
 
     return Scaffold(
         backgroundColor: bodyColor,
@@ -91,8 +132,6 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                   height: 12.w,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      // border: Border.all(
-                      //     width: 1.5, color: fontColor.withOpacity(0.2))
                       color: primaryPurple),
                   child: IconButton(
                       style: IconButton.styleFrom(padding: EdgeInsets.zero),
@@ -114,8 +153,6 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                   height: 5.h,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      // border: Border.all(
-                      //     width: 1.5, color: fontColor.withOpacity(0.2))
                       color: primaryPurple),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -133,13 +170,9 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                 ),
               ),
               Column(children: [
-                SizedBox(
-                  height: 4.5.h,
-                ),
+                SizedBox(height: 4.5.h),
                 setText("Store", FontWeight.w600, 17.sp, fontColor),
-                SizedBox(
-                  height: 3.h,
-                ),
+                SizedBox(height: 3.h),
                 isLoading
                     ? Animate(
                         child: SizedBox(
@@ -147,7 +180,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              LoadingAnimationWidget.staggeredDotsWave(
+                              LoadingAnimationWidget.fallingDot(
                                   color: primaryPurple, size: 18.w),
                               SizedBox(height: 1.h),
                               setText("Loading items...", FontWeight.w600,
@@ -162,9 +195,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                           child: SingleChildScrollView(
                             child: Column(
                               children: [
-                                SizedBox(
-                                  height: 2.h,
-                                ),
+                                SizedBox(height: 2.h),
                                 SizedBox(
                                   width: 100.w,
                                   child: Column(
@@ -173,9 +204,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                     children: [
                                       Row(
                                         children: [
-                                          SizedBox(
-                                            width: 5.w,
-                                          ),
+                                          SizedBox(width: 5.w),
                                           setText("Power ups", FontWeight.w600,
                                               16.sp, fontColor),
                                         ],
@@ -185,9 +214,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                         scrollDirection: Axis.horizontal,
                                         child: Row(
                                           children: [
-                                            SizedBox(
-                                              width: 5.w,
-                                            ),
+                                            SizedBox(width: 5.w),
                                             for (int i = 0;
                                                 i < powerUps.length;
                                                 i++)
@@ -219,8 +246,8 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                   color: preferences.getBool(
                                                               "isDarkMode") ==
                                                           true
-                                                      ? primaryPurple
-                                                          .withOpacity(0.3)
+                                                      ? Color.fromARGB(
+                                                          255, 53, 39, 87)
                                                       : Colors.white,
                                                 ),
                                                 child: TextButton(
@@ -284,9 +311,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                     ],
                                   ),
                                 ),
-                                SizedBox(
-                                  height: 4.h,
-                                ),
+                                SizedBox(height: 4.h),
                                 SizedBox(
                                   width: 100.w,
                                   child: Column(
@@ -295,9 +320,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                     children: [
                                       Row(
                                         children: [
-                                          SizedBox(
-                                            width: 5.w,
-                                          ),
+                                          SizedBox(width: 5.w),
                                           setText("Characters", FontWeight.w600,
                                               16.sp, fontColor),
                                         ],
@@ -307,11 +330,9 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                         scrollDirection: Axis.horizontal,
                                         child: Row(
                                           children: [
-                                            SizedBox(
-                                              width: 5.w,
-                                            ),
+                                            SizedBox(width: 5.w),
                                             for (int i = 0;
-                                                i < charctersPaths.length;
+                                                i < sortedCharacters.length;
                                                 i++)
                                               AnimatedContainer(
                                                 duration:
@@ -322,14 +343,12 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                 height: 20.h,
                                                 decoration: BoxDecoration(
                                                   border: Border.all(
-                                                      color:
-                                                          user.characterIndex ==
-                                                                  i
-                                                              ? primaryPurple
-                                                                  .withOpacity(
-                                                                      0.8)
-                                                              : Colors
-                                                                  .transparent,
+                                                      color: user.characterIndex ==
+                                                              sortedCharacters[
+                                                                  i]
+                                                          ? primaryPurple
+                                                              .withOpacity(0.8)
+                                                          : Colors.transparent,
                                                       width: 3),
                                                   boxShadow: [
                                                     BoxShadow(
@@ -353,8 +372,8 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                   color: preferences.getBool(
                                                               "isDarkMode") ==
                                                           true
-                                                      ? primaryPurple
-                                                          .withOpacity(0.3)
+                                                      ? Color.fromARGB(
+                                                          255, 53, 39, 87)
                                                       : Colors.white,
                                                 ),
                                                 child: TextButton(
@@ -367,8 +386,25 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                                       .circular(
                                                                           10)))),
                                                   onPressed: () {
-                                                    user.changeAvatar(
-                                                        i, user.hatIndex);
+                                                    if (user.charactersList
+                                                        .contains(
+                                                            sortedCharacters[i]
+                                                                .toString())) {
+                                                      // Already owned - just equip
+                                                      user.changeAvatar(
+                                                          sortedCharacters[i],
+                                                          user.hatIndex);
+                                                    } else {
+                                                      // Not owned - show purchase dialog
+                                                      showItemDetails(
+                                                          charctersPaths[
+                                                              sortedCharacters[
+                                                                  i]],
+                                                          user,
+                                                          sortedCharacters[i],
+                                                          'character',
+                                                          500);
+                                                    }
                                                   },
                                                   child: Column(
                                                     mainAxisAlignment:
@@ -376,22 +412,34 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                             .center,
                                                     children: [
                                                       Image.asset(
-                                                        charctersPaths[i],
+                                                        charctersPaths[
+                                                            sortedCharacters[
+                                                                i]],
                                                         width: 22.w,
                                                       ),
                                                       SizedBox(height: 2.h),
-                                                      user.characterIndex == i
+                                                      user.charactersList.contains(
+                                                              sortedCharacters[
+                                                                      i]
+                                                                  .toString())
                                                           ? Row(
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
                                                                       .center,
                                                               children: [
                                                                   setText(
-                                                                      "Unlocked",
+                                                                      user.characterIndex ==
+                                                                              sortedCharacters[
+                                                                                  i]
+                                                                          ? "Equipped"
+                                                                          : "Unlocked",
                                                                       FontWeight
                                                                           .w600,
                                                                       14.sp,
-                                                                      primaryPurple)
+                                                                      user.characterIndex ==
+                                                                              sortedCharacters[i]
+                                                                          ? primaryPurple
+                                                                          : fontColor.withOpacity(0.7))
                                                                 ])
                                                           : Row(
                                                               mainAxisAlignment:
@@ -437,9 +485,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                     children: [
                                       Row(
                                         children: [
-                                          SizedBox(
-                                            width: 5.w,
-                                          ),
+                                          SizedBox(width: 5.w),
                                           setText("Hats", FontWeight.w600,
                                               16.sp, fontColor),
                                         ],
@@ -449,11 +495,9 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                         scrollDirection: Axis.horizontal,
                                         child: Row(
                                           children: [
-                                            SizedBox(
-                                              width: 5.w,
-                                            ),
+                                            SizedBox(width: 5.w),
                                             for (int i = 0;
-                                                i < hatsPaths.length;
+                                                i < sortedHats.length;
                                                 i++)
                                               AnimatedContainer(
                                                 duration:
@@ -464,7 +508,8 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                 height: 20.h,
                                                 decoration: BoxDecoration(
                                                   border: Border.all(
-                                                      color: user.hatIndex == i
+                                                      color: user.hatIndex ==
+                                                              sortedHats[i]
                                                           ? primaryPurple
                                                               .withOpacity(0.8)
                                                           : Colors.transparent,
@@ -491,8 +536,8 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                   color: preferences.getBool(
                                                               "isDarkMode") ==
                                                           true
-                                                      ? primaryPurple
-                                                          .withOpacity(0.3)
+                                                      ? Color.fromARGB(
+                                                          255, 53, 39, 87)
                                                       : Colors.white,
                                                 ),
                                                 child: TextButton(
@@ -505,8 +550,23 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                                       .circular(
                                                                           10)))),
                                                   onPressed: () {
-                                                    user.changeAvatar(
-                                                        user.characterIndex, i);
+                                                    if (user.hatsList.contains(
+                                                        sortedHats[i]
+                                                            .toString())) {
+                                                      // Already owned - just equip
+                                                      user.changeAvatar(
+                                                          user.characterIndex,
+                                                          sortedHats[i]);
+                                                    } else {
+                                                      // Not owned - show purchase dialog
+                                                      showItemDetails(
+                                                          hatsPaths[
+                                                              sortedHats[i]],
+                                                          user,
+                                                          sortedHats[i],
+                                                          'hat',
+                                                          250);
+                                                    }
                                                   },
                                                   child: Column(
                                                     mainAxisAlignment:
@@ -514,22 +574,34 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                             .center,
                                                     children: [
                                                       Image.asset(
-                                                        hatsPaths[i],
+                                                        hatsPaths[
+                                                            sortedHats[i]],
                                                         width: 22.w,
                                                       ),
                                                       SizedBox(height: 2.h),
-                                                      user.hatIndex == i
+                                                      user.hatsList.contains(
+                                                              sortedHats[i]
+                                                                  .toString())
                                                           ? Row(
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
                                                                       .center,
                                                               children: [
                                                                 setText(
-                                                                    "Unlocked",
+                                                                    user.hatIndex ==
+                                                                            sortedHats[
+                                                                                i]
+                                                                        ? "Equipped"
+                                                                        : "Unlocked",
                                                                     FontWeight
                                                                         .w600,
                                                                     14.sp,
-                                                                    primaryPurple)
+                                                                    user.hatIndex ==
+                                                                            sortedHats[
+                                                                                i]
+                                                                        ? primaryPurple
+                                                                        : fontColor
+                                                                            .withOpacity(0.7))
                                                               ],
                                                             )
                                                           : Row(
@@ -568,9 +640,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
-                                SizedBox(
-                                  height: 3.h,
-                                )
+                                SizedBox(height: 3.h)
                               ],
                             ),
                           ),
@@ -689,15 +759,111 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
         });
   }
 
+  void showItemDetails(
+      String image, UserProgress user, int index, String type, int price) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return Animate(
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                insetPadding: EdgeInsets.all(5.w),
+                backgroundColor: bodyColor,
+                content: SizedBox(
+                  height: 40.h,
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(height: 2.h),
+                      setText(
+                          "Unlock $type", FontWeight.w600, 17.sp, fontColor),
+                      SizedBox(height: 1.h),
+                      Image.asset(image, height: 15.h),
+                      SizedBox(height: 5.h),
+                      Container(
+                        width: 60.w,
+                        height: 6.5.h,
+                        decoration: BoxDecoration(
+                            color: user.points < price
+                                ? const Color.fromARGB(255, 200, 176, 255)
+                                : primaryPurple,
+                            borderRadius: BorderRadius.circular(16)),
+                        child: TextButton(
+                          onPressed: () {
+                            if (user.points < price || lock) return;
+
+                            // Deduct points
+                            user.points -= price;
+                            preferences.setInt("userPoints", user.points);
+
+                            // Add to owned items
+                            if (type == 'character') {
+                              if (!user.charactersList
+                                  .contains(index.toString())) {
+                                user.addCharacter(index);
+                              }
+                              // Equip immediately
+                              user.changeAvatar(index, user.hatIndex);
+                            } else if (type == "hat") {
+                              if (!user.hatsList.contains(index.toString())) {
+                                user.addhat(index);
+                              }
+                              // Equip immediately
+                              user.changeAvatar(user.characterIndex, index);
+                            }
+
+                            playSound("audio/pop.MP3");
+                            updateLock();
+                            animationController.forward();
+                            Timer(Duration(milliseconds: 1000), () {
+                              animationController.reset();
+                              updateLock();
+                              sortLists(); // Re-sort to move to owned section
+                            });
+                            Navigator.pop(context); // Close dialog
+                          },
+                          style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16)))),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                FontAwesomeIcons.coins,
+                                color: const Color.fromARGB(255, 255, 255, 255),
+                                size: 5.w,
+                              ),
+                              SizedBox(width: 2.w),
+                              setText("$price points", FontWeight.w600, 14.sp,
+                                  const Color.fromARGB(255, 255, 255, 255)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+                .slideY(begin: .1, end: 0, curve: Curves.ease, duration: 400.ms)
+                .fadeIn();
+          });
+        });
+  }
+
   void update(UserProgress user, PowerUp powerUp) async {
     user.points -= powerUp.price;
     preferences.setInt("userPoints", user.points);
     updatePowerUp(powerUp.id, powerUp.count + 1);
-    setState(
-      () {
-        powerUp.count++;
-      },
-    );
+    setState(() {
+      powerUp.count++;
+    });
   }
 
   bool lock = false;

@@ -1,14 +1,14 @@
+import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/components/avatar.dart';
-import 'package:funlish_app/components/modals/alertModal.dart';
-import 'package:funlish_app/components/modals/passwordModal.dart';
-import 'package:funlish_app/components/modals/successModal.dart';
+import 'package:funlish_app/components/chart.dart';
+import 'package:funlish_app/mainPages/menu/account_info.dart';
+import 'package:funlish_app/model/appTimer.dart';
 import 'package:funlish_app/model/userProgress.dart';
-import 'package:funlish_app/screens/splash.dart';
 import 'package:funlish_app/utility/global.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
@@ -20,51 +20,97 @@ class Account extends StatefulWidget {
 }
 
 class _AccountState extends State<Account> {
-  TextEditingController nameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  TextEditingController passwordEditController = TextEditingController();
-  TextEditingController passwordConfirmController = TextEditingController();
-  bool isPasswordVisible = false;
-  bool isEditting = false;
-  late Color borderColor;
-  late Color containerColor;
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    containerColor =
-        isEditting ? Colors.transparent : fontColor.withOpacity(0.05);
-    borderColor = isEditting ? borderColor : Colors.transparent;
-    nameController.text = preferences.getString("userName")!;
-    emailController.text = preferences.getString("userEmail")!;
-    // passwordConfirmController.text=preferences.getString("userPassword")!;
-    passwordController.text = preferences.getString("userPassword")!;
-  }
+  List<String> charctersPaths = [
+    'assets/images/shop/characters/penguin-purple.png',
+    'assets/images/shop/characters/penguin-pink.png',
+    'assets/images/shop/characters/penguin-green.png',
+    'assets/images/shop/characters/penguin-blue.png',
+    'assets/images/shop/characters/penguin-yellow.png',
+    'assets/images/shop/characters/penguin-grey.png',
+    'assets/images/shop/characters/penguin-red.png',
+    'assets/images/shop/characters/penguin-black.png',
+    'assets/images/shop/characters/wolf-blue.png',
+    'assets/images/shop/characters/wolf-orange.png',
+    'assets/images/shop/characters/wolf-pink.png',
+    'assets/images/shop/characters/rabit-grey.png',
+    'assets/images/shop/characters/rabit-pink.png',
+    'assets/images/shop/characters/hamter-purple.png',
+    'assets/images/shop/characters/hamter-blue.png',
+    'assets/images/shop/characters/hamter-yellow.png',
+    'assets/images/shop/characters/hamter-red.png',
+    'assets/images/shop/characters/hamter-green.png',
+    'assets/images/shop/characters/hamter-pink.png',
+  ];
+  List<String> hatsPaths = [
+    'assets/images/shop/hats/none.png',
+    'assets/images/shop/hats/winter-1.png',
+    'assets/images/shop/hats/hat-1.png',
+    'assets/images/shop/hats/hat-2.png',
+    'assets/images/shop/hats/hat-3.png',
+    'assets/images/shop/hats/hat-6.png',
+    'assets/images/shop/hats/hat-7.png',
+    'assets/images/shop/hats/hat-8.png',
+    'assets/images/shop/hats/hat-4.png',
+    'assets/images/shop/hats/hat-5.png',
+  ];
 
-  void updateIsEditting() {
-    setState(() {
-      isEditting = !isEditting;
-      containerColor =
-          isEditting ? Colors.transparent : fontColor.withOpacity(0.05);
-      borderColor =
-          isEditting ? fontColor.withOpacity(0.2) : Colors.transparent;
-    });
+  List<int> sortedCharacters = [];
+  List<int> sortedHats = [];
+  SessionTracker sessionTracker = SessionTracker();
+  Map<String, int> appTimes = {};
+
+  void sortLists() async {
+    List<Map<String, dynamic>> sessions = [];
+
+    final user = Provider.of<UserProgress>(context, listen: false);
+    // user.addXP(10000);
+    // Sort characters - owned first
+    sortedCharacters = [];
+    List<int> ownedCharacters =
+        user.charactersList.map((e) => int.parse(e)).toList();
+    List<int> unownedCharacters =
+        List.generate(charctersPaths.length, (index) => index)
+            .where((i) => !ownedCharacters.contains(i))
+            .toList();
+
+    sortedCharacters.addAll(ownedCharacters);
+    sortedCharacters.addAll(unownedCharacters);
+
+    // Sort hats - owned first
+    sortedHats = [];
+    List<int> ownedHats = user.hatsList.map((e) => int.parse(e)).toList();
+    List<int> unownedHats = List.generate(hatsPaths.length, (index) => index)
+        .where((i) => !ownedHats.contains(i))
+        .toList();
+
+    sortedHats.addAll(ownedHats);
+    sortedHats.addAll(unownedHats);
+
+    setState(() {});
+    sessions = await sessionTracker.loadSessionLogs();
+    // print(DateTime.parse(sessions[0].keys.elementAt(0)));
+    // DateTime dateTime = DateTime.parse(sessions[0]['timestamp']);
+    for (var s in sessions) {
+      appTimes[_getWeekdayName(s['timestamp'].weekday)] =
+          int.parse(s['duration'].toString());
+    }
+    setState(() {});
+    print(appTimes);
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<UserProgress>(context);
+    final user = Provider.of<UserProgress>(context, listen: false);
+    if (sortedCharacters.isEmpty || sortedHats.isEmpty) {
+      sortLists();
+    }
 
     return Scaffold(
-      backgroundColor: bodyColor,
-      body: SizedBox(
-        width: 100.w,
-        height: 100.h,
-        child: SingleChildScrollView(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
+        backgroundColor: bodyColor,
+        body: SizedBox(
+            width: 100.w,
+            height: 100.h,
+            child: Stack(alignment: Alignment.center, children: [
               Positioned(
                 left: 4.w,
                 top: 3.h,
@@ -88,565 +134,400 @@ class _AccountState extends State<Account> {
                       )),
                 ),
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: 4.5.h,
-                  ),
-                  setText("My account", FontWeight.w600, 17.sp, fontColor),
-                  SizedBox(
-                    height: 6.h,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Avatar(
-                          characterIndex: user.characterIndex,
-                          hatIndex: user.hatIndex,
-                          width: 20.w),
-                      SizedBox(
-                        height: 1.h,
-                      ),
-                      setText(nameController.text, FontWeight.w600, 16.sp,
-                          fontColor),
-                      setText("Level: ${user.level}", FontWeight.w600, 13.sp,
-                          fontColor.withOpacity(0.5)),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 4.h,
-                  ),
-                  Container(
-                    width: 90.w,
-                    height: 6.5.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: containerColor,
-                      border: Border.all(
-                        color: borderColor,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: TextFormField(
-                        readOnly: !isEditting,
-                        style: TextStyle(
-                          fontFamily: "magnet",
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w600,
-                          color: fontColor,
-                        ),
-                        decoration: InputDecoration(
-                          counterStyle: TextStyle(fontSize: 0),
-                          hintStyle: TextStyle(
-                            fontFamily: "magnet",
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                            color: fontColor.withOpacity(0.3),
-                          ),
-                          hintText: "User name",
-                          prefixIcon: Icon(
-                            FontAwesomeIcons.user,
-                            size: 6.w,
-                            color: fontColor.withOpacity(0.4),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.only(top: 1.4.h),
-                        ),
-                        controller: nameController,
-                        maxLength: 40,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                  Container(
-                    width: 90.w,
-                    height: 6.5.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: containerColor,
-                      border: Border.all(
-                        color: borderColor,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: TextFormField(
-                        readOnly: !isEditting,
-                        style: TextStyle(
-                          fontFamily: "magnet",
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w600,
-                          color: fontColor,
-                        ),
-                        decoration: InputDecoration(
-                          counterStyle: TextStyle(fontSize: 0),
-                          hintStyle: TextStyle(
-                            fontFamily: "magnet",
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                            color: fontColor.withOpacity(0.3),
-                          ),
-                          hintText: "Enter",
-                          prefixIcon: Icon(
-                            Icons.email,
-                            size: 6.w,
-                            color: fontColor.withOpacity(0.4),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.only(top: 1.4.h),
-                        ),
-                        controller: emailController,
-                        maxLength: 70,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                    width: 90.w,
-                    height: 6.5.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: containerColor,
-                      border: Border.all(
-                        color: isEditting
-                            ? (passwordController.text.isNotEmpty &&
-                                    passwordController.text.length < 8)
-                                ? Colors.redAccent.withOpacity(0.3)
-                                : (passwordController.text.length >= 8)
-                                    ? Colors.green.withOpacity(0.4)
-                                    : borderColor
-                            : borderColor,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Stack(children: [
-                        TextFormField(
-                          readOnly: !isEditting,
-                          style: TextStyle(
-                            fontFamily: "magnet",
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            color: fontColor,
-                          ),
-                          decoration: InputDecoration(
-                            counterStyle: TextStyle(fontSize: 0),
-                            hintStyle: TextStyle(
-                              fontFamily: "magnet",
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              color: fontColor.withOpacity(0.3),
-                            ),
-                            hintText: "Password",
-                            prefixIcon: Icon(
-                              Icons.lock,
-                              size: 6.w,
-                              color: fontColor.withOpacity(0.4),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.only(top: 1.4.h),
-                          ),
-                          onChanged: (v) {
-                            setState(() {});
-                          },
-                          controller: passwordController,
-                          obscureText: !isPasswordVisible,
-                          maxLength: 50,
-                        ),
-                      ]),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                    width: 90.w,
-                    height: 6.5.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: containerColor,
-                      border: Border.all(
-                        color: isEditting
-                            ? ((passwordController.text !=
-                                        passwordConfirmController.text &&
-                                    passwordConfirmController.text.isNotEmpty)
-                                ? Colors.redAccent.withOpacity(0.3)
-                                : (passwordConfirmController.text.isNotEmpty &&
-                                        passwordController.text ==
-                                            passwordConfirmController.text)
-                                    ? Colors.green.withOpacity(0.4)
-                                    : borderColor)
-                            : borderColor,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Stack(children: [
-                        TextFormField(
-                          readOnly: !isEditting,
-                          style: TextStyle(
-                            fontFamily: "magnet",
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            color: fontColor,
-                          ),
-                          decoration: InputDecoration(
-                            counterStyle: TextStyle(fontSize: 0),
-                            hintStyle: TextStyle(
-                              fontFamily: "magnet",
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              color: fontColor.withOpacity(0.3),
-                            ),
-                            hintText: "Confirm password",
-                            prefixIcon: Icon(
-                              Icons.lock,
-                              size: 6.w,
-                              color: fontColor.withOpacity(0.4),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.only(top: 1.4.h),
-                          ),
-                          onChanged: (value) {
-                            setState(() {});
-                          },
-                          controller: passwordConfirmController,
-                          obscureText: !isPasswordVisible,
-                          maxLength: 50,
-                        ),
-                      ]),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 5.h,
-                  ),
-                  SizedBox(
-                    width: 90.w,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+              Column(children: [
+                SizedBox(
+                  height: 4.5.h,
+                ),
+                setText("My account", FontWeight.w600, 17.sp, fontColor),
+                SizedBox(
+                  height: 4.h,
+                ),
+                SizedBox(
+                  height: 86.h,
+                  child: SingleChildScrollView(
+                    child: Column(
                       children: [
-                        Column(
-                          children: [
-                            Container(
-                              width: 12.5.w,
-                              height: 12.5.w,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  // border: Border.all(
-                                  //     width: 1.5, color: fontColor.withOpacity(0.2))
-                                  color: primaryPurple.withOpacity(0.2)),
-                              child: IconButton(
-                                  style: buttonStyle(16),
-                                  onPressed: () {
-                                    showPasswordModal();
-                                  },
-                                  icon: Icon(
-                                    FontAwesomeIcons.pen,
-                                    size: 6.w,
-                                    color: primaryPurple,
-                                  )),
-                            ),
-                            SizedBox(height: 0.5.h),
-                            setText("Edit", FontWeight.w500, 13.5.sp,
-                                fontColor.withOpacity(0.6))
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Container(
-                              width: 12.5.w,
-                              height: 12.5.w,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  // border: Border.all(
-                                  //     width: 1.5, color: fontColor.withOpacity(0.2))
-                                  color: primaryPurple.withOpacity(0.2)),
-                              child: IconButton(
-                                  style: buttonStyle(16),
-                                  onPressed: () {},
-                                  icon: Icon(
-                                    FontAwesomeIcons.share,
-                                    size: 6.w,
-                                    color: primaryPurple,
-                                  )),
-                            ),
-                            SizedBox(height: 0.5.h),
-                            setText("Share", FontWeight.w500, 13.5.sp,
-                                fontColor.withOpacity(0.6))
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Container(
-                              width: 12.5.w,
-                              height: 12.5.w,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  // border: Border.all(
-                                  //     width: 1.5, color: fontColor.withOpacity(0.2))
-                                  color: primaryPurple.withOpacity(0.2)),
-                              child: IconButton(
-                                  style: buttonStyle(16),
-                                  onPressed: () {
-                                    user.characterIndex = 0;
-                                    user.level = 1;
-                                    user.points = 0;
-                                    user.xp = 0;
-                                    user.hatIndex = 0;
+                        // Avatar(
+                        //     characterIndex: user.characterIndex,
+                        //     hatIndex: user.hatIndex,
+                        //     width: 14.h),
+                        // SizedBox(
+                        //   height: 1.h,
+                        // ),
 
-                                    preferences.clear();
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      CupertinoPageRoute(
-                                        builder: (BuildContext context) =>
-                                            Splash(),
-                                      ),
-                                      (route) => false,
-                                    );
-                                  },
-                                  icon: Icon(
-                                    FontAwesomeIcons.arrowRightFromBracket,
-                                    size: 6.w,
-                                    color: primaryPurple,
-                                  )),
-                            ),
-                            SizedBox(height: 0.5.h),
-                            setText("Sign out", FontWeight.w500, 13.5.sp,
-                                fontColor.withOpacity(0.6))
-                          ],
+                        SizedBox(
+                          height: 4.h,
                         ),
+                        // setText("My character", FontWeight.w600, 15.sp, fontColor),
+
+                        Container(
+                          width: 92.w,
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: primaryPurple.withOpacity(0.1),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Flexible(
+                                child: SizedBox(
+                                  child: Column(
+                                    // mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    spacing: 0.5.h,
+                                    children: [
+                                      Row(
+                                        spacing: 2.w,
+                                        children: [
+                                          Icon(
+                                            FontAwesomeIcons.award,
+                                            color: fontColor,
+                                            size: 5.5.w,
+                                          ),
+                                          setText(
+                                            "level: ${user.level}",
+                                            FontWeight.w600,
+                                            15.sp,
+                                            fontColor,
+                                          ),
+                                        ],
+                                      ),
+                                      // setText(
+                                      //   "User level",
+                                      //   FontWeight.w500,
+                                      //   15.sp,
+                                      //   fontColor,
+                                      // ),
+                                      Row(
+                                        spacing: 2.w,
+                                        children: [
+                                          // Icon(
+                                          //   FontAwesomeIcons.coins,
+                                          //   size: 4.w,
+                                          //   color: fontColor.withOpacity(0.6),
+                                          // ),
+                                          setText(
+                                            "Current XP: ${user.xp}",
+                                            FontWeight.w500,
+                                            13.sp,
+                                            fontColor.withOpacity(0.6),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 2.h),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularPercentIndicator(
+                                    radius: 12.w,
+                                    backgroundColor: fontColor.withOpacity(
+                                      0.2,
+                                    ),
+                                    animation: true,
+                                    curve: Curves.ease,
+                                    animationDuration: 800,
+                                    progressColor: primaryPurple,
+                                    percent: user.xp / user.xpForNextLevel(),
+                                    center: setText(
+                                      "${(user.xp / user.xpForNextLevel() * 100).toStringAsFixed(0)}%",
+                                      FontWeight.w600,
+                                      14.sp,
+                                      fontColor,
+                                      true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: 3.h,
+                        ),
+                        Container(
+                          width: 92.w,
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: primaryPurple.withOpacity(0.1),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Flexible(
+                                child: SizedBox(
+                                  child: Column(
+                                    // mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    spacing: 0.5.h,
+                                    children: [
+                                      Row(
+                                        spacing: 3.w,
+                                        children: [
+                                          Icon(
+                                            FontAwesomeIcons.chartPie,
+                                            color: fontColor,
+                                            size: 5.5.w,
+                                          ),
+                                          FittedBox(
+                                            child: SizedBox(
+                                              width: 45.w,
+                                              child: setText(
+                                                "Chapters completed: 0",
+                                                FontWeight.w600,
+                                                15.sp,
+                                                fontColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      // setText(
+                                      //   "User level",
+                                      //   FontWeight.w500,
+                                      //   15.sp,
+                                      //   fontColor,
+                                      // ),
+                                      Row(
+                                        spacing: 2.w,
+                                        children: [
+                                          // Icon(
+                                          //   FontAwesomeIcons.coins,
+                                          //   size: 4.w,
+                                          //   color: fontColor.withOpacity(0.6),
+                                          // ),
+                                          setText(
+                                            "out of: ${chapters.length}",
+                                            FontWeight.w500,
+                                            13.sp,
+                                            fontColor.withOpacity(0.6),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 2.h),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularPercentIndicator(
+                                    radius: 12.w,
+                                    backgroundColor: fontColor.withOpacity(
+                                      0.2,
+                                    ),
+                                    animation: true,
+                                    curve: Curves.ease,
+                                    animationDuration: 800,
+                                    progressColor: primaryPurple,
+                                    percent: 0,
+                                    center: setText(
+                                      "0%",
+                                      FontWeight.w600,
+                                      14.sp,
+                                      fontColor,
+                                      true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 3.h),
+                        Container(
+                          width: 92.w,
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: primaryPurple.withOpacity(0.1),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 80.w,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        setText(
+                                            "Current week's app time",
+                                            FontWeight.w600,
+                                            15.5.sp,
+                                            fontColor),
+                                        setText(
+                                            "measured in minutes",
+                                            FontWeight.w600,
+                                            13.sp,
+                                            fontColor.withOpacity(0.6)),
+                                        setText(
+                                            "(Updates when the app is closed)",
+                                            FontWeight.w600,
+                                            13.sp,
+                                            fontColor.withOpacity(0.6)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 3.h),
+                              Chart(
+                                  values: appTimes,
+                                  amountMax: 10,
+                                  height: 25.h),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Container(
+                          // color: primaryBlue,
+                          width: 92.w,
+                          height: 14.h,
+                          child: Stack(
+                            children: [
+                              setText("My character", FontWeight.w600, 15.5.sp,
+                                  fontColor),
+                              Swiper(
+                                  itemCount: user.charactersList.length,
+                                  viewportFraction: 0.3,
+                                  loop: false,
+                                  scale: 0.1,
+                                  itemBuilder: (context, index) {
+                                    return AnimatedContainer(
+                                      duration: Duration(milliseconds: 200),
+                                      // width: 50.w,
+                                      // height: 7.h,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: user.characterIndex ==
+                                                    sortedCharacters[index]
+                                                ? primaryPurple
+                                                : primaryPurple.withOpacity(
+                                                    0), // You can change the color
+                                            width:
+                                                3, // You can change the width
+                                          ),
+                                        ),
+                                      ),
+
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          user.characterIndex =
+                                              sortedCharacters[index];
+                                          setState(() {});
+                                        },
+                                        child: Avatar(
+                                            characterIndex:
+                                                sortedCharacters[index],
+                                            hatIndex: 0,
+                                            width: 14.h),
+                                      ),
+                                    );
+                                  }),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+
+                        Container(
+                          // color: fontColor.withOpacity(0.1),
+                          width: 92.w,
+                          height: 14.h,
+                          child: Stack(
+                            children: [
+                              setText("My hats", FontWeight.w600, 15.5.sp,
+                                  fontColor),
+                              Swiper(
+                                  itemCount: user.hatsList.length,
+                                  viewportFraction: 0.3,
+                                  loop: false,
+                                  scale: 0.1,
+                                  itemBuilder: (context, index) {
+                                    return AnimatedContainer(
+                                      duration: Duration(milliseconds: 200),
+                                      // width: 50.w,
+                                      // height: 7.h,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: user.hatIndex ==
+                                                    sortedHats[index]
+                                                ? primaryPurple
+                                                : primaryPurple.withOpacity(
+                                                    0), // You can change the color
+                                            width:
+                                                3, // You can change the width
+                                          ),
+                                        ),
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          user.hatIndex = sortedHats[index];
+                                          setState(() {});
+                                        },
+                                        child: Avatar(
+                                            characterIndex: user.characterIndex,
+                                            hatIndex: sortedHats[index],
+                                            width: 14.h),
+                                      ),
+                                    );
+                                  }),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: primaryPurple),
+                          width: 89.w,
+                          height: 7.h,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  CupertinoPageRoute(
+                                      builder: (context) => AccountInfo()));
+                            },
+                            style: buttonStyle(16),
+                            child: setText("Personal details", FontWeight.w600,
+                                15.sp, Colors.white),
+                          ),
+                        ),
+                        SizedBox(height: 2.5.h),
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 4.h,
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: isEditting
-                            ? primaryPurple
-                            : primaryPurple.withOpacity(0.4)),
-                    width: 89.w,
-                    height: 6.5.h,
-                    child: TextButton(
-                      onPressed: () {
-                        if (!isEditting) return;
-                        bool emailValid = RegExp(
-                                r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                            .hasMatch(emailController.text.toString());
-                        if (emailController.text.isEmpty ||
-                            nameController.text.isEmpty ||
-                            passwordController.text.isEmpty ||
-                            passwordController.text.isEmpty) {
-                          showAlertModal(context, "Please fill all fields");
-                          return;
-                        } else if (!emailValid ||
-                            emailController.text.isEmpty) {
-                          showAlertModal(context, "Please enter a valid email");
-                          return;
-                        } else if (passwordController.text.length < 8) {
-                          showAlertModal(context,
-                              "Your password must be longer than 8 characters");
-                          return;
-                        } else if (passwordController.text !=
-                            passwordConfirmController.text) {
-                          showAlertModal(context, "Passwords don't match");
-                          return;
-                        }
-                        signUserUp();
-                        showSuccessModal(
-                            context, "Account updated Succefully!");
-                        updateIsEditting();
-                      },
-                      style: buttonStyle(16),
-                      child:
-                          setText("Save", FontWeight.w600, 15.sp, Colors.white),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void signUserUp() async {
-    preferences.setBool("isLoggedIn", true);
-    preferences.setString("userName", nameController.text);
-    preferences.setString("userEmail", emailController.text);
-    preferences.setString("userPassword", passwordController.text);
-  }
-
-  void showPasswordModal() {
-    setState(() {
-      passwordEditController.text = "";
-    });
-    showDialog(
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return Animate(
-              child: AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
                 ),
-                insetPadding: EdgeInsets.all(5.w),
-                backgroundColor: bodyColor,
-                content: Container(
-                  height: 40.h,
-                  width: double.maxFinite,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Animate(
-                        child: Icon(
-                          Icons.lock,
-                          size: 6.h,
-                          color: primaryPurple,
-                        ),
-                      )
-                          .scaleXY(
-                            begin: 0,
-                            end: 1.3,
-                            curve: Curves.easeOut,
-                            duration: 300.ms,
-                          )
-                          .scaleXY(
-                              begin: 1.2,
-                              end: 1,
-                              curve: Curves.easeOut,
-                              duration: 300.ms,
-                              delay: 300.ms),
-                      SizedBox(
-                        height: 4.h,
-                      ),
-                      setText("Enter your current password", FontWeight.w600,
-                          15.sp, fontColor),
-                      SizedBox(
-                        height: 2.h,
-                      ),
-                      AnimatedContainer(
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                        width: double.infinity,
-                        height: 6.5.h,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: (passwordEditController.text.isNotEmpty &&
-                                    passwordController.text !=
-                                        passwordEditController.text)
-                                ? Colors.redAccent.withOpacity(0.3)
-                                : (passwordEditController.text.length >= 8)
-                                    ? Colors.green.withOpacity(0.4)
-                                    : fontColor.withOpacity(0.1),
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Stack(children: [
-                            TextFormField(
-                              style: TextStyle(
-                                fontFamily: "magnet",
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w600,
-                                color: fontColor,
-                              ),
-                              decoration: InputDecoration(
-                                counterStyle: TextStyle(fontSize: 0),
-                                hintStyle: TextStyle(
-                                  fontFamily: "magnet",
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: fontColor.withOpacity(0.3),
-                                ),
-                                hintText: "Password",
-                                prefixIcon: Icon(
-                                  Icons.lock,
-                                  size: 6.w,
-                                  color: fontColor.withOpacity(0.4),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.only(top: 1.4.h),
-                              ),
-                              onChanged: (v) {
-                                setState(() {});
-                              },
-                              controller: passwordEditController,
-                              obscureText: !isPasswordVisible,
-                              maxLength: 50,
-                            ),
-                            Positioned(
-                              right: 0,
-                              child: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isPasswordVisible = !isPasswordVisible;
-                                  });
-                                },
-                                icon: Icon(
-                                  isPasswordVisible
-                                      ? Icons.visibility_off
-                                      : Icons.remove_red_eye_rounded,
-                                  size: 6.w,
-                                  color: fontColor.withOpacity(0.4),
-                                ),
-                              ),
-                            )
-                          ]),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 3.h,
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            color: (passwordEditController.text ==
-                                    passwordController.text)
-                                ? primaryPurple
-                                : primaryPurple.withOpacity(0.4)),
-                        width: double.infinity,
-                        height: 6.5.h,
-                        child: TextButton(
-                          onPressed: () {
-                            if (passwordEditController.text ==
-                                passwordController.text) {
-                              updateIsEditting();
-                              Navigator.pop(context);
-                            } else {
-                              return;
-                            }
-                          },
-                          style: buttonStyle(24),
-                          child: setText(
-                              "Enter", FontWeight.w600, 15.sp, Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-                .slideY(begin: .1, end: 0, curve: Curves.ease, duration: 400.ms)
-                .fadeIn();
-          });
-        });
+              ])
+            ])));
   }
+}
+
+String _getWeekdayName(int weekdayNumber) {
+  const weekdays = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
+  return weekdays[
+      weekdayNumber - 1]; // because DateTime.weekday starts from 1 (Monday)
 }

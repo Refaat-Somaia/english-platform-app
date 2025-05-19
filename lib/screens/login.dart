@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +8,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/body.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/signUp/signUp.dart';
+import 'package:get/utils.dart';
 import 'package:sizer/sizer.dart';
+import 'package:http/http.dart' as http;
+
 import 'afterSignUp.dart';
 
 class Login extends StatefulWidget {
@@ -267,6 +272,20 @@ class _LoginState extends State<Login> {
         ),
       ),
     );
+  }
+
+  void logUserIn() async {
+    var response = await http.post(
+      Uri.parse('$serverIp/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': emailController.text.trim(),
+        'password': passwordController.text,
+      }),
+    );
+    if(response.statusCode==200){
+      
+    }
   }
 
   void _showModalBottomSheet(BuildContext context, String msg) {

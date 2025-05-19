@@ -22,7 +22,10 @@ class _TopnotificationState extends State<Topnotification> {
       height: 13.h,
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          color: preferences.getBool("isDarkMode") == true
+              ? Color.fromARGB(255, 53, 39, 87)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Image.asset(

@@ -636,7 +636,7 @@ class _ListeninglevelState extends State<Listeninglevel>
             builder: (context, setState) {
               return Container(
                 decoration: BoxDecoration(
-                    color: Colors.transparent,
+                    color: bodyColor,
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16))),

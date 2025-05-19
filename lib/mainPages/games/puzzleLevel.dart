@@ -10,6 +10,7 @@ import 'package:funlish_app/components/afterGameScreens/lostScreen.dart';
 import 'package:funlish_app/components/afterGameScreens/winScreen.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/components/topNotification.dart';
+import 'package:funlish_app/model/gamesStats.dart';
 import 'package:funlish_app/model/player.dart';
 import 'package:funlish_app/model/powerUp.dart';
 import 'package:funlish_app/model/userProgress.dart';
@@ -28,7 +29,12 @@ extension Shuffle on String {
 class Puzzlelevel extends StatefulWidget {
   final Color color;
   final bool playAgain;
-  const Puzzlelevel({super.key, required this.color, required this.playAgain});
+  final GameStat gameStat;
+  const Puzzlelevel(
+      {super.key,
+      required this.gameStat,
+      required this.color,
+      required this.playAgain});
 
   @override
   State<Puzzlelevel> createState() => _PuzzlelevelState();
@@ -118,6 +124,12 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         isLost = true;
       });
     }
+    updateGameStat(GameStat(
+        id: widget.gameStat.id,
+        gameName: widget.gameStat.gameName,
+        wins: widget.gameStat.wins,
+        score: widget.gameStat.score,
+        timesPlayed: widget.gameStat.timesPlayed + 1));
     timer.cancel();
   }
 
@@ -150,6 +162,12 @@ class _PuzzlelevelState extends State<Puzzlelevel>
     setState(() {
       isWon = true;
     });
+    updateGameStat(GameStat(
+        id: widget.gameStat.id,
+        gameName: widget.gameStat.gameName,
+        wins: widget.gameStat.wins + 1,
+        score: widget.gameStat.score + 50,
+        timesPlayed: widget.gameStat.timesPlayed + 1));
     socketService.sendMessage(socketService.matchid, "", "IWON");
     timer.cancel();
   }
@@ -161,6 +179,12 @@ class _PuzzlelevelState extends State<Puzzlelevel>
     setState(() {
       isDraw = true;
     });
+    updateGameStat(GameStat(
+        id: widget.gameStat.id,
+        gameName: widget.gameStat.gameName,
+        wins: widget.gameStat.wins,
+        score: widget.gameStat.score + 25,
+        timesPlayed: widget.gameStat.timesPlayed + 1));
     timer.cancel();
   }
 
@@ -176,9 +200,9 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         time.cancel();
         if (!(isLost || isWon)) {
           int max = 0;
-          players.forEach((player) {
+          for (var player in players) {
             if (player.points > max) max = player.points;
-          });
+          }
           if (max < correctAnswers) {
             hasWon();
 
@@ -213,9 +237,11 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         addSentence: () {},
         addPoints: addPoints,
         showAlert: () {
-          Navigator.pop(context);
-          showAlertModal(context, "Opponent has left");
-          playSound("audio/left.mp3");
+          if (timer.isActive) {
+            Navigator.pop(context);
+            showAlertModal(context, "Opponent has left");
+            playSound("audio/left.mp3");
+          }
         });
     super.initState();
 
@@ -248,7 +274,7 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    LoadingAnimationWidget.staggeredDotsWave(
+                    LoadingAnimationWidget.fallingDot(
                         color: widget.color, size: 18.w),
                     SizedBox(height: 1.h),
                     setText("Looking for players...", FontWeight.w600, 16.sp,
@@ -532,14 +558,20 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                                                                               powerUps[i].name) {
                                                                             case "Extended Time":
                                                                               if (extendedTimeCount >= 3) {
+                                                                                showAlertModal(context, "Extended Time can only be used 3 times per match");
                                                                                 return;
                                                                               }
-
                                                                               extendTimer();
                                                                               socketService.sendMessage(socketService.matchid, "", "EXTENDTIMER");
                                                                               closeBg();
                                                                               break;
+                                                                            case "Puzzle Hint":
+                                                                              wordHint();
+                                                                              socketService.sendMessage(socketService.matchid, "", "WORDHINT");
 
+                                                                              closeBg();
+
+                                                                              break;
                                                                             default:
                                                                               break;
                                                                           }
@@ -561,7 +593,8 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                                                                   FontWeight
                                                                       .bold,
                                                                   14.sp,
-                                                                  fontColor)
+                                                                  Color(
+                                                                      0xff32356D))
                                                             ],
                                                           ),
                                                       ],
@@ -606,7 +639,9 @@ class _PuzzlelevelState extends State<Puzzlelevel>
       width: 14.w,
       height: 7.h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: preferences.getBool('isDarkMode') == true
+            ? primaryPurple
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
         // border: Border.all(color: fontColor, width: 2),
       ),
@@ -620,8 +655,28 @@ class _PuzzlelevelState extends State<Puzzlelevel>
     Navigator.pushReplacement(
         context,
         CupertinoPageRoute(
-            builder: (BuildContext context) =>
-                Puzzlelevel(color: widget.color, playAgain: true)));
+            builder: (BuildContext context) => Puzzlelevel(
+                  color: widget.color,
+                  playAgain: true,
+                  gameStat: widget.gameStat,
+                )));
+  }
+
+  void updatePowerUpCount(String name) async {
+    for (int i = 0; i < powerUps.length; i++) {
+      if (powerUps[i].name == name) {
+        powerUps[i] = PowerUp(
+            id: powerUps[i].id,
+            price: powerUps[i].price,
+            count: powerUps[i].count - 1,
+            iconPath: powerUps[i].iconPath,
+            description: powerUps[i].description,
+            game: powerUps[i].game,
+            name: powerUps[i].name);
+        await updatePowerUp(powerUps[i].id, powerUps[i].count - 1);
+      }
+    }
+    if (mounted) setState(() {});
   }
 
   Widget WordPage(int index) {
@@ -755,7 +810,9 @@ class _PuzzlelevelState extends State<Puzzlelevel>
                     width: 14.w,
                     height: 7.h,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: preferences.getBool('isDarkMode') == true
+                          ? primaryPurple
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       // border: Border.all(color: fontColor, width: 2),
                     ),
@@ -806,6 +863,13 @@ class _PuzzlelevelState extends State<Puzzlelevel>
   }
 
   extendTimer([sender1]) {
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Extended Time") {
+        if (powerUp.count <= 0) return;
+      }
+    }
+    updatePowerUpCount("Extended Time");
+
     powerUpTimer.cancel();
     if (sender1 != null) {
       sender = sender1.toString();
@@ -835,7 +899,13 @@ class _PuzzlelevelState extends State<Puzzlelevel>
   }
 
   wordHint([sender1]) {
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Puzzle Hint") {
+        if (powerUp.count <= 0) return;
+      }
+    }
     powerUpTimer.cancel();
+    updatePowerUpCount("Puzzle Hint");
 
     if (sender1 != null) {
       sender = sender1.toString();

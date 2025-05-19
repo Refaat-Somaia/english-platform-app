@@ -14,6 +14,9 @@ class SocketService {
   final Function addWord;
   final Function setFirst;
   final Function hasWon;
+  final Function? setId;
+  final Function? wordHint;
+
   final Function hasDraw;
   final Function addPoints;
   final Function hasLost;
@@ -27,6 +30,8 @@ class SocketService {
     required this.updateLoading,
     required this.addAnswer,
     required this.friednlyBomb,
+    this.setId,
+    this.wordHint,
     required this.addWord,
     required this.extendTimer,
     required this.updatePlayers,
@@ -63,15 +68,23 @@ class SocketService {
     socket.off("matchFound/wordPuzzle");
     socket.off("matchFound/bombRelay");
     socket.off("receiveMessage");
+    socket.off("matchFound/castleEscape");
+    socket.off("sessionCreated");
 
     socket.on("sessionUpdate", (data) {
       if (data.containsKey('message') && data['message'] is String) {
-        print("Session Update: ${data['message']}");
         if (data['message'].split(" ").length > 2 &&
             data['message'].split(" ")[2] == "disconnected.") {
           showAlert();
+        } else if (data.containsKey('id') && data['id'] is String) {
+          if (setId != null) setId!(data['id']);
         }
       }
+    });
+
+    socket.on("sessionCreated", (data) {
+      print(data);
+      setId!(data["sessionId"]);
     });
 
     socket.on("matchFound/wordPuzzle", (data) {
@@ -82,7 +95,7 @@ class SocketService {
     });
 
     socket.on("matchFound/castleEscape", (data) {
-      print(data["word"] + data["definition"]);
+      print(data["word"] + data["definition"] + data["options"]);
       matchid = data["sessionId"];
       addWord(data["word"], data["definition"], data["options"]);
       updatePlayers(parsePlayers(data['players']));
@@ -128,6 +141,9 @@ class SocketService {
           break;
         case "FRIENDLYBOMB":
           friednlyBomb(sender);
+          break;
+        case "WORDHINT":
+          if (wordHint != null) wordHint!(sender);
           break;
         default:
           break;

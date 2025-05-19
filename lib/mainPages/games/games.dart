@@ -68,7 +68,7 @@ class _GamesState extends State<Games> {
                           buttonOfMenu(
                               Color.fromARGB(255, 35, 118, 105),
                               "assets/images/translate.png",
-                              "Speedy Transnlator",
+                              "Speedy Translator",
                               800.ms,
                               3),
                           buttonOfMenu(
@@ -167,18 +167,12 @@ class _GamesState extends State<Games> {
           ],
           borderRadius: BorderRadius.circular(16),
           color: preferences.getBool("isDarkMode") == true
-              ? Color.fromARGB(255, 82, 57, 141)
+              ? Color.fromARGB(255, 53, 39, 87)
               : Colors.white,
         ),
         child: TextButton(
           style: buttonStyle(14),
           onPressed: () async {
-            bool result = await InternetConnection().hasInternetAccess;
-            if (!result) {
-              showAlertModal(context, "Please check your internet connection");
-              return;
-            }
-
             switch (index) {
               case 1:
                 Navigator.push(
@@ -251,13 +245,12 @@ class _GamesState extends State<Games> {
         ),
       ),
     )
-        .fadeIn(
-            duration: 300.ms, curve: Curves.ease, delay: (0 + index * 100).ms)
         .scaleXY(
-            begin: 0.6,
+            begin: 1.2,
             end: 1,
             curve: Curves.ease,
             duration: 300.ms,
-            delay: (50 + index * 100).ms);
+            delay: (50 + index * 100).ms)
+        .fadeIn();
   }
 }

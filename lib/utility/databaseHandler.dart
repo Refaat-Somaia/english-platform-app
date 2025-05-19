@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:funlish_app/model/gamesStats.dart';
 import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/level.dart';
 import 'package:funlish_app/model/powerUp.dart';
@@ -20,7 +21,7 @@ Future<void> openDB() async {
     debugPrint("Opening database...");
     database = await openDatabase(
       join(await getDatabasesPath(), 'funlish.db'),
-      version: 5,
+      version: 7,
       onCreate: (db, version) async {
         debugPrint("Creating tables...");
         await db.execute('''
@@ -72,26 +73,40 @@ Future<void> openDB() async {
           )
         ''');
 
+        await db.execute('''
+          CREATE TABLE gamesStats (
+            id TEXT PRIMARY KEY,
+            gameName TEXT,
+            wins INTEGER,
+            score INTEGER,
+            timesPlayed INTEGER
+          )
+        ''');
+
         debugPrint("Tables created.");
         await insertChapters(db);
         await insertMcqLevels(db);
         await insertDefaultPowerUps(db); // Ensure power-ups are preloaded
+        await insertDefaultGamesStats(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 5) {
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS powerUps (
-              id TEXT PRIMARY KEY,
-              name TEXT,
-              game TEXT,
-              price INTEGER,
-              count INTEGER,
-              description TEXT,
-              iconPath TEXT
-            )
-          ''');
-          debugPrint("powerUps table added.");
-          await insertDefaultPowerUps(db);
+        if (oldVersion < 7) {
+          await insertGameStats(
+              db,
+              GameStat(
+                  id: Uuid().v4(),
+                  gameName: "Speedy Translator",
+                  wins: 0,
+                  score: 0,
+                  timesPlayed: 0));
+          await insertGameStats(
+              db,
+              GameStat(
+                  id: Uuid().v4(),
+                  gameName: "Random",
+                  wins: 0,
+                  score: 0,
+                  timesPlayed: 0));
         }
       },
       onOpen: (db) async {
@@ -103,6 +118,52 @@ Future<void> openDB() async {
   } catch (e) {
     debugPrint("Error initializing database: $e");
     throw Exception("Database initialization failed.");
+  }
+}
+
+Future<void> insertDefaultGamesStats(Database db) async {
+  final List<Map<String, dynamic>> gamesStats = await db.query('gamesStats');
+  if (gamesStats.isEmpty) {
+    await insertGameStats(
+        db,
+        GameStat(
+            id: Uuid().v4(),
+            gameName: "Word Puzzle",
+            wins: 0,
+            score: 0,
+            timesPlayed: 0));
+    await insertGameStats(
+        db,
+        GameStat(
+            id: Uuid().v4(),
+            gameName: "Bomb Relay",
+            wins: 0,
+            score: 0,
+            timesPlayed: 0));
+    await insertGameStats(
+        db,
+        GameStat(
+            id: Uuid().v4(),
+            gameName: "Castle Escape",
+            wins: 0,
+            score: 0,
+            timesPlayed: 0));
+    await insertGameStats(
+        db,
+        GameStat(
+            id: Uuid().v4(),
+            gameName: "Speedy Translator",
+            wins: 0,
+            score: 0,
+            timesPlayed: 0));
+    await insertGameStats(
+        db,
+        GameStat(
+            id: Uuid().v4(),
+            gameName: "Random",
+            wins: 0,
+            score: 0,
+            timesPlayed: 0));
   }
 }
 
@@ -166,6 +227,33 @@ Future<void> insertDefaultPowerUps(Database db) async {
   }
 }
 
+Future<int> updateGameStat(GameStat gameStat) async {
+  final db = await database;
+
+  return await db!.update(
+    'gamesStats',
+    gameStat.toMap(),
+    where: 'id = ?',
+    whereArgs: [gameStat.id],
+  );
+}
+
+Future<GameStat?> getGameStatByIGame(String id) async {
+  final db = await database;
+
+  final List<Map<String, dynamic>> maps = await db!.query(
+    'gamesStats',
+    where: 'gameName = ?',
+    whereArgs: [id],
+  );
+
+  if (maps.isNotEmpty) {
+    return GameStat.fromMap(maps.first);
+  } else {
+    return null;
+  }
+}
+
 Future<void> insertChapters(Database db) async {
   try {
     final List<Map<String, dynamic>> existingChapters =
@@ -195,6 +283,20 @@ Future<void> insertChapters(Database db) async {
     debugPrint("Error inserting chapters: $e");
     throw Exception("Failed to insert chapters.");
   }
+}
+
+Future<void> insertGameStats(Database db, GameStat gameStat) async {
+  await db.insert(
+    'gamesStats',
+    {
+      'id': gameStat.id,
+      'gameName': gameStat.gameName,
+      'wins': gameStat.wins,
+      "timesPlayed": gameStat.timesPlayed,
+      "score": gameStat.score,
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace, // Prevents duplicate IDs
+  );
 }
 
 Future<void> insertPowerUp(Database db, PowerUp powerUp) async {

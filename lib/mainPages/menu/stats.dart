@@ -35,6 +35,11 @@ class _StatsState extends State<Stats> {
 
   void getWords() async {
     words = await getLearnedWordsFromDB();
+    Set<Learnedword> set = words.toSet();
+    words = [];
+    for (var word in set) {
+      words.add(word);
+    }
     for (var word in words) {
       if (word.type == "listen") {
         listenWords.add(word);

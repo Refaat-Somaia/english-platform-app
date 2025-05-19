@@ -562,7 +562,7 @@ class _LevelsMenuState extends State<LevelsMenu> {
                       child: IconButton(
                           style: IconButton.styleFrom(padding: EdgeInsets.zero),
                           onPressed: () {
-                            _showModalBottomSheet(context);
+                            showOptionsModal(context);
                           },
                           icon: Icon(
                             FontAwesomeIcons.gear,
@@ -612,7 +612,7 @@ class _LevelsMenuState extends State<LevelsMenu> {
     );
   }
 
-  void _showModalBottomSheet(context) {
+  void showOptionsModal(context) {
     showDialog(
         context: context,
         builder: (context) {

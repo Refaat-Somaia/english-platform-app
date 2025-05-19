@@ -643,9 +643,15 @@ class _McqLevelPageState extends State<McqLevelPage> {
                       child: TextButton(
                         style: buttonStyle(14),
                         onPressed: () {
-                          setState(() {
-                            description = widget.level.arabicDescription;
-                          });
+                          if (description != widget.level.arabicDescription) {
+                            setState(() {
+                              description = widget.level.arabicDescription;
+                            });
+                          } else {
+                            setState(() {
+                              description = widget.level.description;
+                            });
+                          }
                         },
                         child: setText("Translate to Arabic", FontWeight.w600,
                             15.sp, fontColor.withOpacity(0.5)),
@@ -673,7 +679,7 @@ class _McqLevelPageState extends State<McqLevelPage> {
             builder: (context, setState) {
               return Container(
                 decoration: BoxDecoration(
-                    color: Colors.transparent,
+                    color: bodyColor,
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16))),

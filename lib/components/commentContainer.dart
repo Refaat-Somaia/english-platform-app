@@ -47,7 +47,9 @@ class _CommentcontainerState extends State<Commentcontainer> {
             margin: EdgeInsets.only(bottom: 3.h),
             constraints: BoxConstraints(minHeight: 17.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: preferences.getBool("isDarkMode") == true
+                  ? primaryPurple.withOpacity(0.3)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(

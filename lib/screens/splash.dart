@@ -37,6 +37,7 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
     Future.delayed(const Duration(seconds: 2), () async {
       if (preferences.getBool("isDarkMode") == null) {
         preferences.setBool("isDarkMode", false);
+        preferences.setBool("isInGameSounds", true);
       } else if (preferences.getBool("isDarkMode") == true) {
         bodyColor = Color.fromARGB(255, 23, 16, 39);
         fontColor = Color(0xffF9F7FF);
@@ -56,7 +57,7 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: bodyColor,
+      color: Color(0xffF9F7FF),
       child: Animate(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -78,7 +79,7 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
                         delay: 1000.ms,
                         begin: const Offset(0, 0),
                         end: const Offset(-15, -2),
-                        curve: Curves.easeOut,
+                        curve: Curves.ease,
                         duration: 1000.ms)
                     .fadeIn(delay: 1000.ms)
                     .fadeOut(delay: 1100.ms),
@@ -99,7 +100,7 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
                     .slide(
                         begin: const Offset(0, 0),
                         end: const Offset(0, -2),
-                        curve: Curves.easeOut,
+                        curve: Curves.ease,
                         delay: 1000.ms,
                         duration: 1000.ms)
                     .fadeIn(delay: 1000.ms)
@@ -120,7 +121,7 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
                     .slide(
                         begin: const Offset(0, 0),
                         end: const Offset(15, -2),
-                        curve: Curves.easeOut,
+                        curve: Curves.ease,
                         delay: 1000.ms,
                         duration: 1000.ms)
                     .fadeIn(delay: 1000.ms)
@@ -134,7 +135,7 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
           ],
         ),
       )
-          .slideY(begin: -0.07, end: 0, curve: Curves.easeOut, duration: 900.ms)
+          .slideY(begin: -0.07, end: 0, curve: Curves.ease, duration: 900.ms)
           .fadeIn(duration: 900.ms),
     );
   }

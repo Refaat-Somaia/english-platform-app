@@ -15,15 +15,19 @@ void showSuccessModal(BuildContext context, String msg) {
             color: bodyColor,
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16), topRight: Radius.circular(16))),
-        height: 30.h,
+        height: 32.h,
         width: 100.w,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Animate(
               child: Icon(
-                FontAwesomeIcons.fileCircleCheck,
-                size: 7.h,
+                msg == "Code copied to Clipboard"
+                    ? FontAwesomeIcons.clipboardCheck
+                    : msg == "You have received 1000 points"
+                        ? FontAwesomeIcons.coins
+                        : FontAwesomeIcons.fileCircleCheck,
+                size: 6.5.h,
                 color: primaryPurple,
               ),
             )
@@ -43,6 +47,33 @@ void showSuccessModal(BuildContext context, String msg) {
               height: 4.h,
             ),
             setText(msg, FontWeight.w500, 15.sp, fontColor),
+            SizedBox(
+              height: 2.h,
+            ),
+            Container(
+              width: 50.w,
+              height: 6.h,
+              decoration: BoxDecoration(
+                  color: primaryPurple,
+                  borderRadius: BorderRadius.circular(16)),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(16)))),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 2.w),
+                    setText("Ok", FontWeight.w600, 15.sp,
+                        const Color.fromARGB(255, 255, 255, 255)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );

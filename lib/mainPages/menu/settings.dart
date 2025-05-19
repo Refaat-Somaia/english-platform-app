@@ -17,6 +17,7 @@ class Settings extends StatefulWidget {
 class _SettingsState extends State<Settings> {
   @override
   List<double> slides = [];
+  final double offsetX = 1.55;
 
   @override
   void initState() {
@@ -25,7 +26,9 @@ class _SettingsState extends State<Settings> {
     for (int i = 0; i < 7; i++) {
       slides.add(0.3);
     }
-    slides[0] = preferences.getBool("isDarkMode") == true ? 1.5 : 0.3;
+    slides[0] = preferences.getBool("isDarkMode") == true ? offsetX : 0.3;
+    slides[3] = offsetX;
+    slides[4] = preferences.getBool("isInGameSounds") == true ? offsetX : 0.3;
   }
 
   Widget build(BuildContext context) {
@@ -106,7 +109,10 @@ class _SettingsState extends State<Settings> {
                           optionContainer(3, "Show my name in the leaderboard",
                               Icons.leaderboard_rounded, () {}),
                           optionContainer(4, "Play in game sounds",
-                              Icons.volume_mute_rounded, () {}),
+                              Icons.volume_mute_rounded, () {
+                            preferences.setBool("isInGameSounds",
+                                !preferences.getBool("isInGameSounds")!);
+                          }),
                         ]))))
               ])
             ])));
@@ -140,7 +146,7 @@ class _SettingsState extends State<Settings> {
           GestureDetector(
             onTap: () {
               setState(() {
-                slides[index] = (slides[index] == .3 ? 1.5 : .3);
+                slides[index] = (slides[index] == .3 ? offsetX : .3);
               });
               func();
             },
@@ -148,13 +154,15 @@ class _SettingsState extends State<Settings> {
               children: [
                 Container(
                   width: 70,
-                  height: 36,
+                  height: 34,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(32),
-                      color: const Color.fromARGB(255, 239, 239, 239)),
+                      color: slides[index] == .3
+                          ? const Color.fromARGB(255, 213, 213, 213)
+                          : const Color.fromARGB(255, 240, 240, 240)),
                 ),
                 AnimatedSlide(
-                  offset: Offset(slides[index], .2),
+                  offset: Offset(slides[index], .17),
                   duration: Duration(milliseconds: 300),
                   curve: Curves.ease,
                   child: Container(
@@ -162,9 +170,7 @@ class _SettingsState extends State<Settings> {
                     height: 25,
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
-                        color: slides[index] == .3
-                            ? const Color.fromARGB(255, 203, 180, 255)
-                            : primaryPurple),
+                        color: primaryPurple),
                   ),
                 ),
               ],

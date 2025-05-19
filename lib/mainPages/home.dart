@@ -7,13 +7,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/body.dart';
 import 'package:funlish_app/components/avatar.dart';
+import 'package:funlish_app/components/modals/giftModal.dart';
 import 'package:funlish_app/mainPages/flashCards.dart';
+import 'package:funlish_app/mainPages/games/gameIntro.dart';
 import 'package:funlish_app/mainPages/menu/account.dart';
 import 'package:funlish_app/mainPages/chapters/levelsMenu.dart';
+import 'package:funlish_app/mainPages/menu/friendsList.dart';
 import 'package:funlish_app/mainPages/menu/leaderboard.dart';
 import 'package:funlish_app/mainPages/menu/settings.dart';
 import 'package:funlish_app/mainPages/menu/stats.dart';
 import 'package:funlish_app/mainPages/menu/shop.dart';
+import 'package:funlish_app/model/appTimer.dart';
 import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
@@ -42,11 +46,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   double progress = 0;
   double bgOpacity = 0;
   bool isViewingFlashCard = false;
+  String welcomeMsg = '';
   late AnimationController _animationController;
   ScrollController scrollController = ScrollController();
   List<Learnedword> flashCardsWord = [];
   ValueNotifier<int> activeIndex = ValueNotifier<int>(0);
   ValueNotifier<int> activeIndex2 = ValueNotifier<int>(0);
+  List<Map<String, dynamic>> sessionLogs = [];
+  SessionTracker sessionTracker = SessionTracker();
 
   @override
   void initState() {
@@ -54,8 +61,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     _animationController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 300));
     getChapter();
+    sessionTracker.startSession();
+    welcomeMsg = getWelcomeMessage();
     getUserName();
     initSwiperPage();
+    initGamesSwiperPages();
+    generateGift();
   }
 
   void getUserName() async {
@@ -64,18 +75,24 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     });
   }
 
+  void generateGift() {
+    if (preferences.getBool("isShownGift") == true) return;
+
+    Timer(Duration(seconds: 1), () {
+      showGiftModal(context);
+    });
+  }
+
   String getWelcomeMessage() {
     List<String> messages = [
-      "Hey, you’re back! Let’s make today count. 🚀",
-      "Look who’s here! Ready to have some fun? 😏",
-      "Another day, another step closer to fluency! 💪",
-      "Glad to see you again! Let’s crush it today. 🔥",
-      "You showed up half the battle won! Now let’s learn. 🎯",
-      "Guess what? Today’s the perfect day to level up! 🎮",
-      "Back at it again! Love the dedication. 💙",
-      "Whoa, you’re on a roll! Let’s keep that streak going! 🔥",
-      "Your English skills just went up by +1 for logging in! 🎉",
-      "Let’s do this! One step closer to mastering English. 🌟"
+      "Let’s make today count. 🚀",
+      "Look who’s here! 😏",
+      "Another step closer to fluency! 💪",
+      "Let’s crush it today. 🔥",
+      "It's perfect day to level up! 🎮",
+      "Back again! Love the dedication. 💙",
+      "Let’s keep that streak going! 🔥",
+      "One step closer to mastering English. 🌟"
     ];
 
     return messages[Random().nextInt(messages.length)];
@@ -102,6 +119,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     // TODO: implement dispose
     super.dispose();
     _animationController.dispose();
+    final session = sessionTracker.endSession();
+    sessionTracker.saveSessionLog(session);
   }
 
   void getChapter() async {
@@ -138,7 +157,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: bodyColor,
-      body: Container(
+      body: SizedBox(
         width: 100.w,
         height: 94.h,
         child: Stack(
@@ -178,10 +197,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                         width: 6.w,
                       ),
                       Animate(
-                        child: setText(
-                            "Let’s make today count. 🚀",
-                            FontWeight.w500,
-                            13.2.sp,
+                        child: setText(welcomeMsg, FontWeight.w500, 13.2.sp,
                             fontColor.withOpacity(0.5)),
                       )
                           .slideY(
@@ -638,11 +654,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             TopBar(),
             Animate(
               child: Positioned(
-                  left: 0,
+                  right: 0,
                   top: 0,
-                  child: Image.asset(
-                    "assets/images/circle-top.png",
-                    height: 9.h,
+                  child: RotatedBox(
+                    quarterTurns: 1,
+                    child: Image.asset(
+                      "assets/images/circle-top.png",
+                      height: 8.h,
+                    ),
                   )),
             )
                 .slideY(
@@ -684,106 +703,116 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   width: 65.w,
                   height: 100.h,
                   color: bodyColor,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 4.h),
-                      Center(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Avatar(
-                                characterIndex: user.characterIndex,
-                                hatIndex: user.hatIndex,
-                                width: 20.w),
-                            SizedBox(
-                              height: 1.h,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 4.h),
+                        Center(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Avatar(
+                                  characterIndex: user.characterIndex,
+                                  hatIndex: user.hatIndex,
+                                  width: 20.w),
+                              SizedBox(
+                                height: 1.h,
+                              ),
+                              setText(
+                                  userName, FontWeight.w600, 16.sp, fontColor),
+                              setText("Level: ${user.level}", FontWeight.w600,
+                                  13.sp, fontColor.withOpacity(0.5)),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: 2.h,
+                        ),
+                        Center(
+                          child: Container(
+                            width: 55.w,
+                            height: 1,
+                            decoration: BoxDecoration(
+                                color: fontColor.withOpacity(0.1)),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 2.h,
+                        ),
+                        NavButton("Review", FontAwesomeIcons.clipboardList,
+                            primaryPurple, () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (BuildContext context) => Stats(),
                             ),
-                            setText(
-                                userName, FontWeight.w600, 16.sp, fontColor),
-                            setText("Level: ${user.level}", FontWeight.w600,
-                                13.sp, fontColor.withOpacity(0.5)),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: 2.h,
-                      ),
-                      Center(
-                        child: Container(
-                          width: 55.w,
-                          height: 1,
-                          decoration:
-                              BoxDecoration(color: fontColor.withOpacity(0.1)),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 2.h,
-                      ),
-                      NavButton("Review", FontAwesomeIcons.clipboardList,
-                          primaryPurple, () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (BuildContext context) => Stats(),
-                          ),
-                        );
-                      }),
-                      NavButton("Leaderboard", Icons.leaderboard_rounded,
-                          primaryPurple, () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (BuildContext context) => Leaderboard(),
-                          ),
-                        );
-                      }),
-                      NavButton(
-                          "Schedule", Icons.date_range_rounded, primaryPurple,
-                          () {
-                        final notiService = NotiService();
+                          );
+                        }),
+                        NavButton("Leaderboard", Icons.leaderboard_rounded,
+                            primaryPurple, () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (BuildContext context) => Leaderboard(),
+                            ),
+                          );
+                        }),
+                        NavButton(
+                            "Schedule", Icons.date_range_rounded, primaryPurple,
+                            () {
+                          final notiService = NotiService();
 
-                        notiService.showNotification(
-                          title: "Leveled Up!",
-                          body: "You have reached level congratulations!",
-                        );
-                      }),
-                      NavButton("Store", FontAwesomeIcons.store, primaryPurple,
-                          () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (BuildContext context) => Shop(),
-                          ),
-                        );
-                      }),
-                      NavButton("Friends list", FontAwesomeIcons.users,
-                          primaryPurple, () async {}),
-                      NavButton(
-                          "My account", FontAwesomeIcons.user, primaryPurple,
-                          () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (BuildContext context) => Account(),
-                          ),
-                        );
-                      }),
-                      NavButton(
-                          "Settings", FontAwesomeIcons.gear, primaryPurple,
-                          () async {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (BuildContext context) =>
-                                Settings(update: () {
-                              initSwiperPage();
-                              widget.update();
-                            }),
-                          ),
-                        );
-                      }),
-                    ],
+                          notiService.showNotification(
+                            title: "Leveled Up!",
+                            body: "You have reached level congratulations!",
+                          );
+                        }),
+                        NavButton(
+                            "Store", FontAwesomeIcons.store, primaryPurple, () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (BuildContext context) => Shop(),
+                            ),
+                          );
+                        }),
+                        NavButton("Friends list", FontAwesomeIcons.users,
+                            primaryPurple, () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (BuildContext context) => Friendslist(),
+                            ),
+                          );
+                        }),
+                        NavButton(
+                            "My account", FontAwesomeIcons.user, primaryPurple,
+                            () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (BuildContext context) => Account(),
+                            ),
+                          );
+                        }),
+                        NavButton(
+                            "Settings", FontAwesomeIcons.gear, primaryPurple,
+                            () async {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (BuildContext context) =>
+                                  Settings(update: () {
+                                initSwiperPage();
+                                initGamesSwiperPages();
+                                widget.update();
+                              }),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
                   ),
                 ),
               )
@@ -812,34 +841,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               width: 92.w,
               child: Animate(
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Container(
-                          width: btnSize,
-                          height: btnSize,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: primaryPurple.withOpacity(0.1),
-                            // border: Border.all(
-                            //     width: 1.5,
-                            //     color: primaryPurple.withOpacity(0.2))
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/notification.png',
-                                width: 8.w,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          width: 3.w,
-                        ),
                         Container(
                           width: btnSize,
                           height: btnSize,
@@ -872,6 +878,29 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 ),
                               ],
                             ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 3.w,
+                        ),
+                        Container(
+                          width: btnSize,
+                          height: btnSize,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: primaryPurple.withOpacity(0.1),
+                            // border: Border.all(
+                            //     width: 1.5,
+                            //     color: primaryPurple.withOpacity(0.2))
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/notification.png',
+                                width: 8.w,
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -972,7 +1001,20 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(24),
                           color: primaryPurple),
                       child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                    builder: (BuildContext context) =>
+                                        Gameintro(
+                                          gameName: "Bomb Relay",
+                                          color:
+                                              Color.fromARGB(255, 235, 140, 50),
+                                          text:
+                                              "A grammar bomb is passed between players ⏳. A sentence with a missing word is given. The player must fill in the blank correctly before time runs out! If they fail or take too long, they lose the game. Last player standing wins!",
+                                          path: "assets/animations/bomb.json",
+                                        )));
+                          },
                           child: setText(
                               "Play", FontWeight.w600, 14.sp, Colors.white)),
                     )
@@ -1022,7 +1064,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(24),
                           color: primaryPurple),
                       child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Gameintro(
+                              gameName: "Word Puzzle",
+                              color: const Color.fromARGB(255, 90, 63, 151),
+                              text:
+                                  "Each player is given scattered letters on the screen. They must rearrange them to form a word. The fastest player to solve 4 words wins!",
+                              path: "assets/animations/puzle.json",
+                            );
+                          },
                           child: setText(
                               "Play", FontWeight.w600, 14.sp, Colors.white)),
                     )
@@ -1072,7 +1122,15 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(24),
                           color: primaryPurple),
                       child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Gameintro(
+                              gameName: "Castle Escape",
+                              color: const Color.fromARGB(255, 48, 79, 139),
+                              text:
+                                  "Each player is trapped in a virtual castle 🏰. To escape, they must solve grammar puzzles, fix incorrect sentences, or choose the right words.",
+                              path: "assets/animations/castle.json",
+                            );
+                          },
                           child: setText(
                               "Play", FontWeight.w600, 14.sp, Colors.white)),
                     )

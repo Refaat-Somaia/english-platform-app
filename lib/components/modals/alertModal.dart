@@ -15,7 +15,7 @@ void showAlertModal(BuildContext context, String msg) {
             color: bodyColor,
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16), topRight: Radius.circular(16))),
-        height: 30.h,
+        height: 33.h,
         width: 100.w,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -45,6 +45,24 @@ void showAlertModal(BuildContext context, String msg) {
             SizedBox(
                 width: 90.w,
                 child: setText(msg, FontWeight.w500, 15.sp, fontColor, true)),
+            SizedBox(
+              height: 3.h,
+            ),
+            Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: primaryPurple),
+              width: 50.w,
+              height: 6.h,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: TextButton.styleFrom(
+                    backgroundColor: primaryPurple, padding: EdgeInsets.all(0)),
+                child: setText("Ok", FontWeight.w600, 15.sp, Colors.white),
+              ),
+            ),
           ],
         ),
       );

@@ -12,7 +12,6 @@ import 'package:funlish_app/model/question.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:sizer/sizer.dart';
 import 'package:http/http.dart' as http;
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:funlish_app/utility/global.dart';
 
 class Quizpage extends StatefulWidget {
@@ -143,7 +142,7 @@ class _QuizpageState extends State<Quizpage>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      LoadingAnimationWidget.staggeredDotsWave(
+                      LoadingAnimationWidget.fallingDot(
                           color: primaryPurple, size: 18.w),
                       SizedBox(height: 1.h),
                       setText(
@@ -283,8 +282,10 @@ class _QuizpageState extends State<Quizpage>
                         child: TextButton(
                           onPressed: () async {
                             if (answer == "") return;
+                            print(answer);
+                            print(currentQuestion.answer);
 
-                            if (answer == currentQuestion.answer) {
+                            if (answer == currentQuestion.answer.trim()) {
                               answeredQuestions.add(currentQuestion);
 
                               if (currentDifficultyLevel == 0) {
@@ -353,8 +354,11 @@ class _QuizpageState extends State<Quizpage>
                                                 intermediateAttempts) *
                                             intermeiatePenaltyFactor);
 
+                                print(intermediateAttempts);
+
                                 if (intermediateProgress <= 0 &&
-                                    beginnerDone < beginnerQuestions.length) {
+                                    beginnerDone < beginnerQuestions.length &&
+                                    intermediateAttempts > 1) {
                                   showAlertModal(
                                       context, "Dropped back to Beginner");
 
@@ -423,42 +427,68 @@ class _QuizpageState extends State<Quizpage>
   }
 
   Future<void> signUserUp() async {
+    setState(() {
+      isLoading = true;
+    });
     var response = await http.post(
-      Uri.parse('$serverIp/items/personal_details/'),
+      Uri.parse('$serverIp/users/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'first_name': preferences.getString("userName"),
-        'gender': preferences.getBool('userGender'),
+        'password': preferences.getString('userPassword'),
         'email': preferences.getString("userEmail"),
       }),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print(jsonDecode(response.body)["data"]["id"]);
-      int detailsId = jsonDecode(response.body)["data"]["id"];
-
+    if (response.statusCode == 204) {
       response = await http.post(
-        Uri.parse('$serverIp/items/student/'),
+        Uri.parse('$serverIp/auth/login/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'interests': widget.userInterests,
-          'personal_details': detailsId,
+          'email': preferences.getString("userEmail"),
+          'password': preferences.getString('userPassword'),
         }),
       );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        preferences.setBool("isLoggedIn", true);
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-              builder: (context) => Body(
-                    pageIndex: 0,
-                  )),
-          (route) => false,
+      if (response.statusCode == 200) {
+        response = await http.post(
+          Uri.parse('$serverIp/items/personal_details/'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'user_name': preferences.getString("userName"),
+            'gender': preferences.getBool('userGender'),
+            'email': preferences.getString("userEmail"),
+          }),
         );
-        showAlertModal(context, "current level: $totalProgress");
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          print(jsonDecode(response.body)["data"]["id"]);
+          int detailsId = jsonDecode(response.body)["data"]["id"];
+
+          response = await http.post(
+            Uri.parse('$serverIp/items/student/'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'interests': widget.userInterests,
+              'personal_details': detailsId,
+              "english_level": totalProgress
+            }),
+          );
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            preferences.setBool("isLoggedIn", true);
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Body(
+                        pageIndex: 0,
+                      )),
+              (route) => false,
+            );
+            showAlertModal(context, "current level: $totalProgress");
+          }
+        }
+      } else {
+        print("Error ${response.statusCode}: ${response.body}");
       }
-    } else {
-      print("Error ${response.statusCode}: ${response.body}");
     }
   }
 

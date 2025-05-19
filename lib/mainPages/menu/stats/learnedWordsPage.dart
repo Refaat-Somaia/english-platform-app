@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/empty.dart';
 import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
@@ -141,16 +142,11 @@ class _LearnedwordspageState extends State<Learnedwordspage> {
                   children: [
                     if (words.isEmpty)
                       SizedBox(
-                        width: 90.w,
-                        height: 70.h,
-                        child: Center(
-                          child: setText(
-                              "You have no saved words...",
-                              FontWeight.w500,
-                              16.sp,
-                              fontColor.withOpacity(0.6)),
-                        ),
-                      ),
+                          width: 90.w,
+                          height: 70.h,
+                          child: EmptyPlaceHolder(
+                              text:
+                                  "You have no saved ${widget.type} words...")),
                     if (words.isNotEmpty)
                       for (var word in words)
                         Container(

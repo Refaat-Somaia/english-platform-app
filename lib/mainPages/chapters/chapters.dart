@@ -173,9 +173,9 @@ class _ChaptersState extends State<Chapters> {
                               });
                             },
                             icon: Icon(
-                              Icons.view_headline_rounded,
+                              Icons.menu_rounded,
                               size: 7.w,
-                              color: bodyColor,
+                              color: Colors.white,
                             )),
                       ),
                     ),

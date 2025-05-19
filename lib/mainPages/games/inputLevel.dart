@@ -9,13 +9,13 @@ import 'package:funlish_app/components/afterGameScreens/lostScreen.dart';
 import 'package:funlish_app/components/afterGameScreens/winScreen.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/components/topNotification.dart';
+import 'package:funlish_app/model/gamesStats.dart';
 import 'package:funlish_app/model/player.dart';
 import 'package:funlish_app/model/powerUp.dart';
 import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/utility/socketIoClient.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -25,7 +25,12 @@ import 'package:sizer/sizer.dart';
 class Inputlevel extends StatefulWidget {
   final Color color;
   final bool playAgain;
-  const Inputlevel({super.key, required this.color, required this.playAgain});
+  final GameStat gameStat;
+  const Inputlevel(
+      {super.key,
+      required this.gameStat,
+      required this.color,
+      required this.playAgain});
 
   @override
   State<Inputlevel> createState() => _InputlevelState();
@@ -50,7 +55,7 @@ class _InputlevelState extends State<Inputlevel>
   bool isTimeUp = false;
   bool isCountDown = false;
   bool isWon = false;
-  int timerDuration = 15;
+  int timerDuration = 20;
   bool isLost = false;
   bool isDraw = false;
   bool isFirst = true;
@@ -106,7 +111,7 @@ class _InputlevelState extends State<Inputlevel>
   }
 
   void addPoints(String name, String points) {
-    players.forEach((player) {
+    for (var player in players) {
       print(player);
 
       if (player.name == name) {
@@ -114,7 +119,7 @@ class _InputlevelState extends State<Inputlevel>
           player.points = int.parse(points);
         });
       }
-    });
+    }
   }
 
   void hasLost() {
@@ -125,6 +130,12 @@ class _InputlevelState extends State<Inputlevel>
         isLost = true;
       });
     }
+    updateGameStat(GameStat(
+        id: widget.gameStat.id,
+        gameName: widget.gameStat.gameName,
+        wins: widget.gameStat.wins,
+        score: widget.gameStat.score,
+        timesPlayed: widget.gameStat.timesPlayed + 1));
   }
 
   void updatePlayers(List<Player> newPlayers) {
@@ -205,7 +216,7 @@ class _InputlevelState extends State<Inputlevel>
     setState(() {
       isFirst = isFirst1;
       timer.cancel();
-      timerDuration = 15;
+      timerDuration = 20;
       isFriendlyBomb = false;
     });
 
@@ -226,6 +237,12 @@ class _InputlevelState extends State<Inputlevel>
     final user = Provider.of<UserProgress>(context, listen: false);
     user.addXP(50);
     playSound("audio/win.MP3");
+    updateGameStat(GameStat(
+        id: widget.gameStat.id,
+        gameName: widget.gameStat.gameName,
+        wins: widget.gameStat.wins + 1,
+        score: widget.gameStat.score + 50,
+        timesPlayed: widget.gameStat.timesPlayed + 1));
 
     setState(() {
       isWon = true;
@@ -241,6 +258,12 @@ class _InputlevelState extends State<Inputlevel>
       isDraw = true;
       timer.cancel();
     });
+    updateGameStat(GameStat(
+        id: widget.gameStat.id,
+        gameName: widget.gameStat.gameName,
+        wins: widget.gameStat.wins,
+        score: widget.gameStat.score + 25,
+        timesPlayed: widget.gameStat.timesPlayed + 1));
   }
 
   @override
@@ -267,9 +290,11 @@ class _InputlevelState extends State<Inputlevel>
           hasWon: hasWon,
           addWord: addWord,
           showAlert: () {
-            Navigator.pop(context);
-            showAlertModal(context, "Opponent has left");
-            playSound("audio/left.mp3");
+            if (timer.isActive) {
+              Navigator.pop(context);
+              showAlertModal(context, "Opponent has left");
+              playSound("audio/left.mp3");
+            }
           });
     }
     Timer(Duration(seconds: widget.playAgain ? 1 : 0), () {
@@ -311,7 +336,7 @@ class _InputlevelState extends State<Inputlevel>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            LoadingAnimationWidget.staggeredDotsWave(
+                            LoadingAnimationWidget.fallingDot(
                                 color: widget.color, size: 18.w),
                             SizedBox(height: 1.h),
                             setText("Looking for players...", FontWeight.w600,
@@ -531,11 +556,19 @@ class _InputlevelState extends State<Inputlevel>
                                                                           70.w,
                                                                       height:
                                                                           7.h,
-                                                                      decoration: BoxDecoration(
-                                                                          borderRadius: BorderRadius.circular(
-                                                                              12),
-                                                                          color:
-                                                                              Colors.white),
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(12),
+                                                                        color: preferences.getBool("isDarkMode") ==
+                                                                                true
+                                                                            ? Color.fromARGB(
+                                                                                255,
+                                                                                53,
+                                                                                39,
+                                                                                87)
+                                                                            : Colors.white,
+                                                                      ),
                                                                       child:
                                                                           Center(
                                                                         child:
@@ -770,14 +803,17 @@ class _InputlevelState extends State<Inputlevel>
                                                                                           switch (powerUps[i].name) {
                                                                                             case "Extended Time":
                                                                                               if (extendedTimeCount >= 3) {
+                                                                                                showAlertModal(context, "Extended Time can only be used 3 times per match");
                                                                                                 return;
                                                                                               }
+
                                                                                               extendTimer();
                                                                                               socketService.sendMessage(socketService.matchid, "", "EXTENDTIMER");
                                                                                               closeBg();
                                                                                               break;
                                                                                             case "Friendly Bomb":
                                                                                               friednlyBomb();
+
                                                                                               socketService.sendMessage(socketService.matchid, "", "FRIENDLYBOMB");
                                                                                               closeBg();
 
@@ -792,7 +828,7 @@ class _InputlevelState extends State<Inputlevel>
                                                                                         )),
                                                                                   ),
                                                                                   SizedBox(height: 1.h),
-                                                                                  setText(powerUps[i].count.toString(), FontWeight.bold, 14.sp, fontColor)
+                                                                                  setText(powerUps[i].count.toString(), FontWeight.bold, 14.sp, Color(0xff32356D))
                                                                                 ],
                                                                               ),
                                                                           ],
@@ -860,7 +896,30 @@ class _InputlevelState extends State<Inputlevel>
     timer.cancel();
   }
 
+  alert(String text) {
+    powerUpTimer.cancel();
+
+    playSound('audio/enemyPowerUp.mp3');
+
+    setState(() {
+      showNotification = true;
+    });
+
+    powerUpTimer = Timer(Duration(seconds: 6), () {
+      setState(() {
+        showNotification = false;
+      });
+    });
+  }
+
   extendTimer([sender1]) {
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Extended Time") {
+        if (powerUp.count <= 0) return;
+      }
+    }
+    updatePowerUpCount("Extended Time");
+
     powerUpTimer.cancel();
     if (sender1 != null) {
       sender = sender1.toString();
@@ -894,8 +953,11 @@ class _InputlevelState extends State<Inputlevel>
     Navigator.pushReplacement(
         context,
         CupertinoPageRoute(
-            builder: (BuildContext context) =>
-                Inputlevel(color: widget.color, playAgain: true)));
+            builder: (BuildContext context) => Inputlevel(
+                  color: widget.color,
+                  playAgain: true,
+                  gameStat: widget.gameStat,
+                )));
   }
 
   closeBg() {
@@ -908,6 +970,13 @@ class _InputlevelState extends State<Inputlevel>
   }
 
   friednlyBomb([sender1]) {
+    for (var powerUp in powerUps) {
+      if (powerUp.name == "Friendly Bomb") {
+        if (powerUp.count <= 0) return;
+      }
+    }
+    updatePowerUpCount("Friendly Bomb");
+
     powerUpTimer.cancel();
     if (sender1 != null) {
       sender = sender1.toString();
@@ -935,5 +1004,22 @@ class _InputlevelState extends State<Inputlevel>
     setState(() {
       isFriendlyBomb = true;
     });
+  }
+
+  void updatePowerUpCount(String name) async {
+    for (var powerUp in powerUps) {
+      if (powerUp.name == name) {
+        powerUp = PowerUp(
+            id: powerUp.id,
+            price: powerUp.price,
+            count: powerUp.count - 1,
+            iconPath: powerUp.iconPath,
+            description: powerUp.description,
+            game: powerUp.game,
+            name: powerUp.name);
+        await updatePowerUp(powerUp.id, powerUp.count - 1);
+      }
+    }
+    if (mounted) setState(() {});
   }
 }

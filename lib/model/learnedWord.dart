@@ -19,4 +19,16 @@ class Learnedword {
       'description': description,
     };
   }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is Learnedword &&
+            runtimeType == other.runtimeType &&
+            word == other.word &&
+            description == other.description;
+  }
+
+  @override
+  int get hashCode => word.hashCode ^ description.hashCode;
 }
