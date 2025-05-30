@@ -50,7 +50,7 @@ void showAlertModal(BuildContext context, String msg) {
             ),
             Container(
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   color: primaryPurple),
               width: 50.w,
               height: 6.h,

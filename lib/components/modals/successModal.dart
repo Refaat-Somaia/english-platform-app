@@ -22,7 +22,7 @@ void showSuccessModal(BuildContext context, String msg) {
           children: [
             Animate(
               child: Icon(
-                msg == "Code copied to Clipboard"
+                msg == "Code was copied to Clipboard"
                     ? FontAwesomeIcons.clipboardCheck
                     : msg == "You have received 1000 points"
                         ? FontAwesomeIcons.coins
@@ -55,7 +55,7 @@ void showSuccessModal(BuildContext context, String msg) {
               height: 6.h,
               decoration: BoxDecoration(
                   color: primaryPurple,
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(12)),
               child: TextButton(
                 onPressed: () {
                   Navigator.pop(context);
@@ -67,7 +67,6 @@ void showSuccessModal(BuildContext context, String msg) {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(width: 2.w),
                     setText("Ok", FontWeight.w600, 15.sp,
                         const Color.fromARGB(255, 255, 255, 255)),
                   ],

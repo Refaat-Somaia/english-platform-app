@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/mainPages/games/games.dart';
 import 'package:funlish_app/mainPages/threads/threads.dart';
-import 'package:funlish_app/model/appTimer.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/mainPages/chapters/chapters.dart';
 import 'package:funlish_app/mainPages/home.dart';
@@ -46,7 +45,6 @@ class _BodyState extends State<Body> {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    
   }
 
   @override

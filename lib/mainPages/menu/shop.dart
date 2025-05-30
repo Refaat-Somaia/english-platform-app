@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/appButton.dart';
+import 'package:funlish_app/mainPages/chapters/chapters.dart';
+import 'package:funlish_app/model/Chapter.dart';
 import 'package:funlish_app/model/powerUp.dart';
 import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
@@ -70,6 +73,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     getPowerUps();
+    getLockedChapters();
     animationController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 300));
   }
@@ -82,6 +86,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
 
   List<int> sortedCharacters = [];
   List<int> sortedHats = [];
+  List<Chapter> lockedChapters = [];
 
   void sortLists() {
     final user = Provider.of<UserProgress>(context, listen: false);
@@ -108,6 +113,23 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
     sortedHats.addAll(ownedHats);
     sortedHats.addAll(unownedHats);
 
+    setState(() {});
+  }
+
+  void getLockedChapters() {
+    lockedChapters.clear();
+    for (var chapter in chapters) {
+      bool isUnlocked = false;
+
+      for (String ind in preferences.getStringList("userChapters")!) {
+        if (chapter.id == int.parse(ind)) {
+          isUnlocked = true;
+        }
+      }
+      if (!isUnlocked) {
+        lockedChapters.add(chapter);
+      }
+    }
     setState(() {});
   }
 
@@ -196,6 +218,118 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                             child: Column(
                               children: [
                                 SizedBox(height: 2.h),
+                                SizedBox(
+                                  width: 100.w,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          SizedBox(width: 5.w),
+                                          setText("Chapters", FontWeight.w600,
+                                              16.sp, fontColor),
+                                        ],
+                                      ),
+                                      SizedBox(height: 1.h),
+                                      SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          children: [
+                                            SizedBox(width: 5.w),
+                                            for (int i = 0;
+                                                i < lockedChapters.length;
+                                                i++)
+                                              Container(
+                                                padding: EdgeInsets.all(16),
+                                                margin:
+                                                    EdgeInsets.only(right: 2.h),
+                                                width: 70.w,
+                                                height: 26.h,
+                                                decoration: BoxDecoration(
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: const Color
+                                                                .fromARGB(255,
+                                                                243, 243, 243)
+                                                            .withOpacity(
+                                                                preferences.getBool(
+                                                                            "isDarkMode") ==
+                                                                        true
+                                                                    ? 0
+                                                                    : 0.2),
+                                                        spreadRadius: 0.01.h,
+                                                        blurRadius: 8,
+                                                        offset:
+                                                            const Offset(0, 7),
+                                                      )
+                                                    ],
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
+                                                    color: lockedChapters[i]
+                                                        .colorAsColor
+                                                        .withOpacity(0.2)),
+                                                child: TextButton(
+                                                  style: buttonStyle(12),
+                                                  onPressed: () {
+                                                    showChapterDetails(
+                                                        lockedChapters[i],
+                                                        user);
+                                                  },
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Image.asset(
+                                                        'assets/images/chapters/${lockedChapters[i].name.toLowerCase()}/${lockedChapters[i].name.toLowerCase()}1.png',
+                                                        height: 15.h,
+                                                      ),
+                                                      // SizedBox(height: 1.h),
+                                                      setText(
+                                                          lockedChapters[i]
+                                                              .name,
+                                                          FontWeight.w600,
+                                                          16.sp,
+                                                          fontColor,
+                                                          true),
+
+                                                      SizedBox(height: 1.h),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Icon(
+                                                            FontAwesomeIcons
+                                                                .coins,
+                                                            color: fontColor
+                                                                .withOpacity(
+                                                                    0.7),
+                                                            size: 6.w,
+                                                          ),
+                                                          SizedBox(width: 2.w),
+                                                          setText(
+                                                              "1500 points",
+                                                              FontWeight.w600,
+                                                              14.sp,
+                                                              fontColor
+                                                                  .withOpacity(
+                                                                      0.7))
+                                                        ],
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
                                 SizedBox(
                                   width: 100.w,
                                   child: Column(
@@ -872,5 +1006,133 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
     setState(() {
       lock = !lock;
     });
+  }
+
+  void showChapterDetails(Chapter chapter, UserProgress user) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return Animate(
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                insetPadding: EdgeInsets.all(5.w),
+                backgroundColor: bodyColor,
+                content: Container(
+                  height: 42.h,
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(height: 2.h),
+                      Image.asset(
+                          'assets/images/chapters/${chapter.name.toLowerCase()}/${chapter.name.toLowerCase()}1.png',
+                          height: 15.h),
+                      SizedBox(height: 1.h),
+                      setText(chapter.name, FontWeight.w600, 16.sp, fontColor),
+                      setText(chapter.description, FontWeight.w500, 14.sp,
+                          fontColor.withOpacity(0.6), true),
+                      SizedBox(height: 5.h),
+                      SizedBox(height: 2.h),
+                      Container(
+                        width: 60.w,
+                        height: 6.5.h,
+                        decoration: BoxDecoration(
+                            color: user.points < 1500
+                                ? const Color.fromARGB(255, 200, 176, 255)
+                                : primaryPurple,
+                            borderRadius: BorderRadius.circular(16)),
+                        child: TextButton(
+                          onPressed: () {
+                            chapterUnlockedModal(chapter);
+
+                            if (user.points < 1500) return;
+
+                            playSound("audio/pop.MP3");
+                            List<String>? list =
+                                preferences.getStringList("userChapters");
+                            list!.add(chapter.id.toString());
+                            preferences.setStringList("userChapters", list);
+                            user.addPoints(-1500);
+                            getLockedChapters();
+                            Navigator.pop(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16)))),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                FontAwesomeIcons.coins,
+                                color: const Color.fromARGB(255, 255, 255, 255),
+                                size: 5.w,
+                              ),
+                              SizedBox(width: 2.w),
+                              setText("1500 points", FontWeight.w600, 14.sp,
+                                  const Color.fromARGB(255, 255, 255, 255)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+                .slideY(begin: .1, end: 0, curve: Curves.ease, duration: 400.ms)
+                .fadeIn();
+          });
+        });
+  }
+
+  void chapterUnlockedModal(Chapter chapter) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return Animate(
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                insetPadding: EdgeInsets.all(5.w),
+                backgroundColor: bodyColor,
+                content: Container(
+                  height: 40.h,
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 2.h),
+                      Image.asset(
+                          'assets/images/chapters/${chapter.name.toLowerCase()}/${chapter.name.toLowerCase()}1.png',
+                          height: 15.h),
+                      SizedBox(height: 1.h),
+                      setText(chapter.name, FontWeight.w600, 16.sp, fontColor),
+                      setText("Chapter Unlocked!", FontWeight.w500, 15.sp,
+                          fontColor),
+                      SizedBox(height: 3.h),
+                      AppButton(
+                          function: () {
+                            Navigator.pop(context);
+                          },
+                          height: 6.h,
+                          width: 50.w,
+                          color: primaryPurple,
+                          text: "Ok")
+                    ],
+                  ),
+                ),
+              ),
+            )
+                .slideY(begin: .1, end: 0, curve: Curves.ease, duration: 400.ms)
+                .fadeIn();
+          });
+        });
   }
 }

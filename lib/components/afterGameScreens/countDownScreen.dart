@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:funlish_app/components/avatar.dart';
 import 'package:funlish_app/model/player.dart';
 import 'package:funlish_app/utility/global.dart';
-import 'package:lottie/lottie.dart';
 import 'package:sizer/sizer.dart';
 
 class Countdownscreen extends StatefulWidget {
@@ -51,33 +50,39 @@ class _CountdownscreenState extends State<Countdownscreen> {
                 (index) => Padding(
                       padding: EdgeInsets.symmetric(horizontal: 1.w),
                       child: Animate(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Avatar(
-                                characterIndex:
-                                    widget.players[index].characterIndex,
-                                hatIndex: widget.players[index].hatIndex,
-                                width: 18.w),
-                            SizedBox(
-                              height: 1.h,
-                            ),
-                            setText(
-                                widget.players[index].name.toString(),
-                                FontWeight.w600,
-                                14.5.sp,
-                                fontColor.withOpacity(0.8)),
-                            setText(
-                                "Level: ${widget.players[index].level}",
-                                FontWeight.w600,
-                                13.sp,
-                                fontColor.withOpacity(0.5)),
-                            // setText(
-                            //     "Level: 1",
-                            //     FontWeight.w600,
-                            //     13.sp,
-                            //     fontColor.withOpacity(0.5)),
-                          ],
+                        child: Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: colors.elementAt(index).withOpacity(0.15)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Avatar(
+                                  characterIndex:
+                                      widget.players[index].characterIndex,
+                                  hatIndex: widget.players[index].hatIndex,
+                                  width: 18.w),
+                              SizedBox(
+                                height: 1.h,
+                              ),
+                              setText(
+                                  widget.players[index].name.toString(),
+                                  FontWeight.w600,
+                                  14.5.sp,
+                                  fontColor.withOpacity(0.8)),
+                              setText(
+                                  "Level: ${widget.players[index].level}",
+                                  FontWeight.w600,
+                                  13.sp,
+                                  fontColor.withOpacity(0.5)),
+                              // setText(
+                              //     "Level: 1",
+                              //     FontWeight.w600,
+                              //     13.sp,
+                              //     fontColor.withOpacity(0.5)),
+                            ],
+                          ),
                         ),
                       )
                           .scaleXY(

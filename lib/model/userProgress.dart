@@ -28,6 +28,14 @@ class UserProgress extends ChangeNotifier {
     return (baseXp * (level * growthFactor)).toInt();
   }
 
+  void addPoints(int amount) async {
+    points += amount;
+
+    await saveProgress();
+
+    notifyListeners();
+  }
+
   void addXP(int amount) async {
     xp += amount;
     points += amount;
@@ -84,6 +92,15 @@ class UserProgress extends ChangeNotifier {
       preferences.setStringList("hatsList", hatsList);
       notifyListeners();
     }
+  }
+
+  void clearUser() {
+    characterIndex = 0;
+    level = 1;
+    points = 0;
+    xp = 0;
+    hatIndex = 0;
+    charactersList = [];
   }
 
   static Future<UserProgress> loadProgress() async {

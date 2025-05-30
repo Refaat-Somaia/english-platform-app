@@ -6,6 +6,7 @@ import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:funlish_app/body.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/model/question.dart';
@@ -49,54 +50,66 @@ class _QuizpageState extends State<Quizpage>
 
   void fetchQuestions() async {
     animationController.forward();
-    // bool isConnected = await InternetConnection().hasInternetAccess;
-    // if (!isConnected) {
-    //   Navigator.pop(context);
 
-    //   showAlertModal(context, "Please check your internet connection.");
-    //   return;
-    // }
-    var url = Uri.parse('$serverIp/items/question/');
-    var response = await http.get(url);
-    if (response.statusCode == 200) {
-      animationController.reverse();
-      Timer(Duration(milliseconds: 300), () {
-        setState(() {
-          isLoading = false;
+    var url = Uri.parse('${dotenv.env['API_URL']}/items/question/');
+
+    try {
+      var response = await http.get(url).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        animationController.reverse();
+        Timer(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+          }
         });
-      });
-      QuestionList questionList =
-          QuestionList.fromJson(json.decode(response.body));
-      questionList.data.forEach((question) {
-        print(question);
 
-        switch (question.difficulty) {
-          case "beginner":
-            beginnerQuestions.add(question);
-            break;
-          case "intermediate":
-            intermediateQuestions.add(question);
-            break;
-          case "advanced":
-            advancedQuestions.add(question);
-            break;
-          default:
-            break;
+        QuestionList questionList =
+            QuestionList.fromJson(json.decode(response.body));
+
+        for (var question in questionList.data) {
+          print(question);
+
+          switch (question.difficulty) {
+            case "beginner":
+              beginnerQuestions.add(question);
+              break;
+            case "intermediate":
+              intermediateQuestions.add(question);
+              break;
+            case "advanced":
+              advancedQuestions.add(question);
+              break;
+            default:
+              break;
+          }
         }
-      });
-      print("so far so good");
 
-      setState(() {
-        questions = beginnerQuestions;
-        currentQuestion = questions[0];
-      });
-      print("so far so good");
-
-      return;
+        setState(() {
+          questions = beginnerQuestions;
+          currentQuestion = questions[0];
+        });
+      } else {
+        handleError("Server error");
+        print(response.body);
+      }
+    } on TimeoutException {
+      // animationController.reverse();
+      handleError("Please check your internet connection");
+    } catch (e) {
+      // animationController.reverse();
+      handleError("Please check your internet connection");
     }
-    showAlertModal(context, "Please check your internet connection.");
+  }
+
+  void handleError(String text, [error]) {
+    print("Error");
+    print(error);
+
     Navigator.pop(context);
-    return;
+    showAlertModal(context, text);
   }
 
   @override
@@ -106,6 +119,9 @@ class _QuizpageState extends State<Quizpage>
     animationController.forward();
     super.initState();
     fetchQuestions();
+    // getIntresets();
+    // signUserUp();
+
     // listener =
     //     InternetConnection().onStatusChange.listen((InternetStatus status) {
     //   switch (status) {
@@ -151,7 +167,7 @@ class _QuizpageState extends State<Quizpage>
                   ),
                 )
                   .animate(controller: animationController, autoPlay: false)
-                  .fadeIn(delay: 200.ms, duration: 400.ms, begin: 0)
+                  .fadeIn(duration: 400.ms)
               : Animate(
                   child: Column(
                     children: [
@@ -278,12 +294,10 @@ class _QuizpageState extends State<Quizpage>
                             color: answer != ""
                                 ? primaryPurple
                                 : primaryPurple.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(16)),
+                            borderRadius: BorderRadius.circular(12)),
                         child: TextButton(
                           onPressed: () async {
                             if (answer == "") return;
-                            print(answer);
-                            print(currentQuestion.answer);
 
                             if (answer == currentQuestion.answer.trim()) {
                               answeredQuestions.add(currentQuestion);
@@ -429,67 +443,112 @@ class _QuizpageState extends State<Quizpage>
   Future<void> signUserUp() async {
     setState(() {
       isLoading = true;
+      animationController.forward();
     });
-    var response = await http.post(
-      Uri.parse('$serverIp/users/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'first_name': preferences.getString("userName"),
-        'password': preferences.getString('userPassword'),
-        'email': preferences.getString("userEmail"),
-      }),
-    );
-
-    if (response.statusCode == 204) {
-      response = await http.post(
-        Uri.parse('$serverIp/auth/login/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': preferences.getString("userEmail"),
-          'password': preferences.getString('userPassword'),
-        }),
-      );
-      if (response.statusCode == 200) {
-        response = await http.post(
-          Uri.parse('$serverIp/items/personal_details/'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'user_name': preferences.getString("userName"),
-            'gender': preferences.getBool('userGender'),
-            'email': preferences.getString("userEmail"),
-          }),
-        );
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          print(jsonDecode(response.body)["data"]["id"]);
-          int detailsId = jsonDecode(response.body)["data"]["id"];
-
-          response = await http.post(
-            Uri.parse('$serverIp/items/student/'),
+    getIntresets();
+    try {
+      var response = await http
+          .post(
+            Uri.parse('${dotenv.env['API_URL']}/users'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              'interests': widget.userInterests,
-              'personal_details': detailsId,
-              "english_level": totalProgress
+              'first_name': preferences.getString("userName"),
+              'password': preferences.getString('userPassword'),
+              'email': preferences.getString("userEmail"),
+              // "email": "fdafdsasjfasd@gmail.com",
+              "role": dotenv.env['STUDENT_ROLE_TOKEN']
             }),
-          );
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("req 2");
+
+        response = await http
+            .post(
+              Uri.parse('${dotenv.env['API_URL']}/auth/login/'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'email': preferences.getString("userEmail"),
+                'password': preferences.getString('userPassword'),
+              }),
+            )
+            .timeout(const Duration(seconds: 10));
+        if (response.statusCode == 200) {
+          print("req 3");
+
+          print(jsonDecode(response.body));
+          preferences.setString(
+              "userToken", jsonDecode(response.body)["data"]["refresh_token"]);
+          response = await http
+              .post(
+                Uri.parse('${dotenv.env['API_URL']}/items/personal_details/'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({
+                  'user_name': preferences.getString("userName"),
+                  'gender': preferences.getBool('userGender'),
+                  'email': preferences.getString("userEmail"),
+                }),
+              )
+              .timeout(const Duration(seconds: 10));
+
           if (response.statusCode == 200 || response.statusCode == 201) {
-            preferences.setBool("isLoggedIn", true);
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => Body(
-                        pageIndex: 0,
-                      )),
-              (route) => false,
-            );
-            showAlertModal(context, "current level: $totalProgress");
+            print("req 4");
+
+            print(jsonDecode(response.body)["data"]["id"]);
+            int detailsId = jsonDecode(response.body)["data"]["id"];
+
+            response = await http
+                .post(
+                  Uri.parse('${dotenv.env['API_URL']}/items/student/'),
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    'interests': widget.userInterests,
+                    'personal_details': detailsId,
+                    "english_level": totalProgress
+                  }),
+                )
+                .timeout(const Duration(seconds: 10));
+            if (response.statusCode == 200 || response.statusCode == 201) {
+              print("req 5");
+
+              preferences.setBool("isLoggedIn", true);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => Body(
+                          pageIndex: 0,
+                        )),
+                (route) => false,
+              );
+              // showAlertModal(context, "current level: $totalProgress");
+            }
           }
         }
-      } else {
-        print("Error ${response.statusCode}: ${response.body}");
+      }
+    } catch (e) {
+      handleError("Please check your internet connetion", e);
+    }
+  }
+
+  void getIntresets() {
+    preferences.setStringList("userChapters", ["1", "4", "5", "6"]);
+
+    for (var chapter in chapters) {
+      for (String interest in widget.userInterests) {
+        if (interest == chapter.name) {
+          print(interest);
+
+          List<String> list = preferences.getStringList("userChapters")!;
+
+          list.add(chapter.id.toString());
+          var set = {...list};
+          list = set.toList();
+          preferences.setStringList("userChapters", list);
+        }
       }
     }
+    print(preferences.getStringList("userChapters"));
   }
 
   double intermediateThreshold = 35.0;

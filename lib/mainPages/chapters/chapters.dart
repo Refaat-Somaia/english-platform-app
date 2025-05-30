@@ -28,23 +28,27 @@ class _ChaptersState extends State<Chapters> {
   ValueNotifier<int> activeIndex = ValueNotifier<int>(0);
   ScrollController scrollController = ScrollController();
   late PageController _pageController;
+  List<int> unlockedChapters = [];
 
   @override
   void initState() {
     super.initState();
-
+    for (String ind in preferences.getStringList("userChapters")!) {
+      unlockedChapters.add(int.parse(ind));
+    }
     _pageController = PageController();
 
     images = chapters.map((theme) {
       return List.generate(
         4,
         (index) =>
-            'assets/images/${theme.name.toLowerCase()}/${theme.name.toLowerCase()}${index + 1}.png',
+            'assets/images/chapters/${theme.name.toLowerCase()}/${theme.name.toLowerCase()}${index + 1}.png',
       ).where((path) => AssetImage(path) != null).toList();
     }).toList();
 
     blobs = chapters
-        .map((theme) => 'assets/images/${theme.name.toLowerCase()}/blob.png')
+        .map((theme) =>
+            'assets/images/chapters/${theme.name.toLowerCase()}/blob.png')
         .toList();
   }
 
@@ -52,6 +56,13 @@ class _ChaptersState extends State<Chapters> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  bool isChapterLocked(int index) {
+    for (int ind in unlockedChapters) {
+      if (index == ind) return false;
+    }
+    return true;
   }
 
   @override
@@ -85,8 +96,8 @@ class _ChaptersState extends State<Chapters> {
                                       duration:
                                           const Duration(milliseconds: 300),
                                       curve: Curves.easeOut,
-                                      width: 2.5.w,
-                                      height: 2.5.w,
+                                      width: 2.w,
+                                      height: 2.w,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(50),
                                         color: value == index
@@ -107,10 +118,10 @@ class _ChaptersState extends State<Chapters> {
                         itemCount: chapters.length,
                         itemBuilder: (context, index) {
                           return Chapterintro(
-                            chapter: chapters[index],
-                            imagesList: images[index],
-                            blobPath: blobs[index],
-                          );
+                              chapter: chapters[index],
+                              imagesList: images[index],
+                              blobPath: blobs[index],
+                              isLocked: isChapterLocked(index + 1));
                         },
                         onPageChanged: (value) {
                           setState(() {
@@ -163,10 +174,12 @@ class _ChaptersState extends State<Chapters> {
                         height: 12.w,
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
-                            color: chapters[activeIndex.value].colorAsColor),
+                            border:
+                                Border.all(color: fontColor.withOpacity(0.2))),
                         child: IconButton(
-                            style:
-                                IconButton.styleFrom(padding: EdgeInsets.zero),
+                            style: IconButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                            ),
                             onPressed: () {
                               setState(() {
                                 isMenuView = !isMenuView;
@@ -175,7 +188,7 @@ class _ChaptersState extends State<Chapters> {
                             icon: Icon(
                               Icons.menu_rounded,
                               size: 7.w,
-                              color: Colors.white,
+                              color: fontColor,
                             )),
                       ),
                     ),
@@ -210,11 +223,10 @@ class _ChaptersState extends State<Chapters> {
                                       setState(() {
                                         isMenuView = !isMenuView;
                                       });
-                                      Timer(Duration(milliseconds: 100), () {
-                                        _pageController.animateToPage(
-                                            activeIndex.value,
-                                            duration: 500.ms,
-                                            curve: Curves.easeInOut);
+                                      Timer(Duration(milliseconds: 50), () {
+                                        _pageController.jumpToPage(
+                                          activeIndex.value,
+                                        );
                                       });
                                     },
                                     icon: Icon(
@@ -228,7 +240,9 @@ class _ChaptersState extends State<Chapters> {
                               ),
                               for (int i = 0; i < chapters.length; i++)
                                 Chaptermenucontainer(
-                                    chapter: chapters[i], image: images[i][0])
+                                    chapter: chapters[i],
+                                    image: images[i][0],
+                                    isLocked: isChapterLocked(i + 1)),
                             ],
                           ),
                         ),

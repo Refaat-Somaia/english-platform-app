@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/appButton.dart';
 import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/level.dart';
 import 'package:funlish_app/model/userProgress.dart';
@@ -195,14 +196,8 @@ class _McqLevelPageState extends State<McqLevelPage> {
                     SizedBox(
                       height: 29.h,
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: primaryPurple),
-                      width: 89.w,
-                      height: 6.5.h,
-                      child: TextButton(
-                        onPressed: () {
+                    AppButton(
+                        function: () {
                           setState(() {
                             started = true;
                           });
@@ -217,11 +212,10 @@ class _McqLevelPageState extends State<McqLevelPage> {
                             }
                           });
                         },
-                        style: buttonStyle(14),
-                        child: setText(
-                            "Start", FontWeight.w600, 15.sp, Colors.white),
-                      ),
-                    ),
+                        height: 7.h,
+                        width: 90.w,
+                        color: primaryPurple,
+                        text: "Start")
                   ],
                 ),
               ],

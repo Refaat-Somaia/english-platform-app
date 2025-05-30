@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/appButton.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/screens/login.dart';
@@ -67,7 +68,7 @@ class _SignupState extends State<Signup> {
                       Animate(
                         child: Container(
                           width: 90.w,
-                          height: 6.5.h,
+                          height: 7.h,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
@@ -118,7 +119,7 @@ class _SignupState extends State<Signup> {
                       Animate(
                         child: Container(
                           width: 90.w,
-                          height: 6.5.h,
+                          height: 7.h,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
@@ -171,7 +172,7 @@ class _SignupState extends State<Signup> {
                           duration: Duration(milliseconds: 300),
                           curve: Curves.easeOut,
                           width: 90.w,
-                          height: 6.5.h,
+                          height: 7.h,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
@@ -251,7 +252,7 @@ class _SignupState extends State<Signup> {
                           duration: Duration(milliseconds: 300),
                           curve: Curves.easeOut,
                           width: 90.w,
-                          height: 6.5.h,
+                          height: 7.h,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
@@ -315,49 +316,42 @@ class _SignupState extends State<Signup> {
                         height: 8.h,
                       ),
                       Animate(
-                        child: Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              color: primaryPurple),
-                          width: 89.w,
-                          height: 6.5.h,
-                          child: TextButton(
-                            onPressed: () {
-                              bool emailValid = RegExp(
-                                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                                  .hasMatch(emailController.text.toString());
-                              if (emailController.text.isEmpty ||
-                                  nameController.text.isEmpty ||
-                                  passwordController.text.isEmpty ||
-                                  passwordController.text.isEmpty) {
-                                showAlertModal(
-                                    context, "Please fill all fields");
-                                return;
-                              } else if (!emailValid ||
-                                  emailController.text.isEmpty) {
-                                showAlertModal(
-                                    context, "Please enter a valid email");
-                                return;
-                              } else if (passwordController.text.length < 8) {
-                                showAlertModal(context,
-                                    "Your password must be longer than 8 characters");
-                                return;
-                              } else if (passwordController.text !=
-                                  passwordConfirmController.text) {
-                                showAlertModal(
-                                    context, "Passwords don't match");
-                                return;
-                              }
-                              saveSignUpInfo();
-                            },
-                            style: TextButton.styleFrom(
-                                backgroundColor: primaryPurple,
-                                padding: EdgeInsets.all(0)),
-                            child: setText(
-                                "Next", FontWeight.w600, 15.sp, Colors.white),
-                          ),
-                        ),
-                      ).fadeIn(delay: 1000.ms),
+                              child: AppButton(
+                                  function: () {
+                                    bool emailValid = RegExp(
+                                            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                        .hasMatch(
+                                            emailController.text.toString());
+                                    if (emailController.text.isEmpty ||
+                                        nameController.text.isEmpty ||
+                                        passwordController.text.isEmpty ||
+                                        passwordController.text.isEmpty) {
+                                      showAlertModal(
+                                          context, "Please fill all fields");
+                                      return;
+                                    } else if (!emailValid ||
+                                        emailController.text.isEmpty) {
+                                      showAlertModal(context,
+                                          "Please enter a valid email");
+                                      return;
+                                    } else if (passwordController.text.length <
+                                        8) {
+                                      showAlertModal(context,
+                                          "Your password must be longer than 8 characters");
+                                      return;
+                                    } else if (passwordController.text !=
+                                        passwordConfirmController.text) {
+                                      showAlertModal(
+                                          context, "Passwords don't match");
+                                      return;
+                                    }
+                                    saveSignUpInfo();
+                                  },
+                                  height: 7.h,
+                                  width: 90.w,
+                                  color: primaryPurple,
+                                  text: "Next"))
+                          .fadeIn(delay: 1000.ms),
                       SizedBox(
                         height: 2.h,
                       ),

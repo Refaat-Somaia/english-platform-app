@@ -17,9 +17,9 @@ Color fontColor = const Color(0xff32356D);
 
 final player = AudioPlayer();
 
-String serverIp = 'http://192.168.232.74:8055';
+String serverIp = 'http://192.168.110.1:8055';
 String gameServerIp = "https://funlish-games-server.onrender.com";
-// String gameServerIp = "http://192.168.1.110:3000";
+// String gameServerIp = "http://192.168.110.1:3000";
 const List<Color> colors = [
   Color.fromARGB(255, 48, 212, 234),
   Color(0xffFFCC70),
@@ -50,6 +50,7 @@ Text setText(String text, FontWeight weight, double size, Color color,
 }
 
 void playSound(String path) async {
+  if (preferences.getBool('isInGameSounds') == false) return;
   await player.play(AssetSource(path)); // Play asset file
 }
 

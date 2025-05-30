@@ -44,7 +44,7 @@ class _GameintroState extends State<Gameintro> {
 
   getGameStats() async {
     gameStat = await getGameStatByIGame(widget.gameName);
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
@@ -207,16 +207,19 @@ class _GameintroState extends State<Gameintro> {
                                         ? Inputlevel(
                                             color: widget.color,
                                             gameStat: gameStat!,
+                                            updateStats: getGameStats,
                                             playAgain: false,
                                           )
                                         : widget.gameName == "Word Puzzle"
                                             ? Puzzlelevel(
                                                 color: widget.color,
                                                 gameStat: gameStat!,
+                                                updateStats: getGameStats,
                                                 playAgain: false)
                                             : Escapelevel(
                                                 playAgain: false,
                                                 gameStat: gameStat!,
+                                                updateStats: getGameStats,
                                                 color: widget.color,
                                               )));
                       },

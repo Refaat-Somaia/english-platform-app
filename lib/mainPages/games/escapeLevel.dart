@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -26,12 +25,14 @@ import 'package:sizer/sizer.dart';
 class Escapelevel extends StatefulWidget {
   final Color color;
   final GameStat gameStat;
+  final Function updateStats;
   final bool playAgain;
 
   const Escapelevel(
       {super.key,
       required this.gameStat,
       required this.color,
+      required this.updateStats,
       required this.playAgain});
 
   @override
@@ -134,6 +135,7 @@ class _EscapelevelState extends State<Escapelevel>
         wins: widget.gameStat.wins,
         score: widget.gameStat.score,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
     timer.cancel();
   }
 
@@ -190,6 +192,8 @@ class _EscapelevelState extends State<Escapelevel>
         wins: widget.gameStat.wins + 1,
         score: widget.gameStat.score + 50,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
+
     socketService.sendMessage(socketService.matchid, "", "IWON");
     timer.cancel();
   }
@@ -209,6 +213,8 @@ class _EscapelevelState extends State<Escapelevel>
         wins: widget.gameStat.wins,
         score: widget.gameStat.score + 25,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
+
     timer.cancel();
   }
 
@@ -903,6 +909,7 @@ class _EscapelevelState extends State<Escapelevel>
                   color: widget.color,
                   playAgain: true,
                   gameStat: widget.gameStat,
+                  updateStats: widget.updateStats,
                 )));
   }
 

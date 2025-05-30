@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:funlish_app/model/player.dart';
 import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/global.dart';
@@ -24,7 +25,7 @@ class SocketService {
   final Function extendTimer;
   final Function showAlert;
 
-  static String SERVER_URL = gameServerIp;
+  static String SERVER_URL = dotenv.env['GAME_SERVER_URL']!;
 
   SocketService({
     required this.updateLoading,

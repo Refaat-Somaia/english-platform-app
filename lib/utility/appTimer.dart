@@ -23,13 +23,44 @@ class SessionTracker {
     await _checkAndResetWeeklyLogs(prefs);
 
     List<String> existingLogs = prefs.getStringList('sessionLogs') ?? [];
+    List<Map<String, dynamic>> logs = existingLogs.map((logStr) {
+      final json = jsonDecode(logStr);
+      return {
+        'timestamp': DateTime.parse(json['timestamp']),
+        'duration': json['duration'],
+      };
+    }).toList();
 
-    existingLogs.add(jsonEncode({
-      'timestamp': newSession['timestamp'].toIso8601String(),
-      'duration': newSession['duration'],
-    }));
+    DateTime today = DateTime.now();
+    DateTime todayStart = DateTime(today.year, today.month, today.day);
 
-    await prefs.setStringList('sessionLogs', existingLogs);
+    bool updated = false;
+    for (int i = 0; i < logs.length; i++) {
+      DateTime logDate = logs[i]['timestamp'];
+      DateTime logDayStart = DateTime(logDate.year, logDate.month, logDate.day);
+
+      if (logDayStart == todayStart) {
+        logs[i]['duration'] += newSession['duration'];
+        updated = true;
+        break;
+      }
+    }
+
+    if (!updated) {
+      logs.add({
+        'timestamp': newSession['timestamp'],
+        'duration': newSession['duration'],
+      });
+    }
+
+    List<String> updatedLogs = logs.map((log) {
+      return jsonEncode({
+        'timestamp': log['timestamp'].toIso8601String(),
+        'duration': log['duration'],
+      });
+    }).toList();
+
+    await prefs.setStringList('sessionLogs', updatedLogs);
   }
 
   Future<List<Map<String, dynamic>>> loadSessionLogs() async {

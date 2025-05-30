@@ -2,15 +2,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/appButton.dart';
 import 'package:funlish_app/components/avatar.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/components/modals/passwordModal.dart';
 import 'package:funlish_app/components/modals/successModal.dart';
 import 'package:funlish_app/model/userProgress.dart';
+import 'package:funlish_app/screens/login.dart';
 import 'package:funlish_app/screens/splash.dart';
+import 'package:funlish_app/utility/databaseHandler.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
+import 'package:sqflite/sqlite_api.dart';
 
 class AccountInfo extends StatefulWidget {
   const AccountInfo({super.key});
@@ -398,19 +402,16 @@ class _AccountInfoState extends State<AccountInfo> {
                                   color: primaryPurple.withOpacity(0.2)),
                               child: IconButton(
                                   style: buttonStyle(16),
-                                  onPressed: () {
-                                    user.characterIndex = 0;
-                                    user.level = 1;
-                                    user.points = 0;
-                                    user.xp = 0;
-                                    user.hatIndex = 0;
+                                  onPressed: () async {
+                                    user.clearUser();
+                                    await preferences.clear();
+                                    await clearDatabase();
 
-                                    preferences.clear();
                                     Navigator.pushAndRemoveUntil(
                                       context,
                                       CupertinoPageRoute(
                                         builder: (BuildContext context) =>
-                                            Splash(),
+                                            Login(),
                                       ),
                                       (route) => false,
                                     );
@@ -432,48 +433,40 @@ class _AccountInfoState extends State<AccountInfo> {
                   SizedBox(
                     height: 4.h,
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: isEditting
-                            ? primaryPurple
-                            : primaryPurple.withOpacity(0.4)),
-                    width: 89.w,
-                    height: 6.5.h,
-                    child: TextButton(
-                      onPressed: () {
-                        if (!isEditting) return;
-                        bool emailValid = RegExp(
-                                r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                            .hasMatch(emailController.text.toString());
-                        if (emailController.text.isEmpty ||
-                            nameController.text.isEmpty ||
-                            passwordController.text.isEmpty ||
-                            passwordController.text.isEmpty) {
-                          showAlertModal(context, "Please fill all fields");
-                          return;
-                        } else if (!emailValid ||
-                            emailController.text.isEmpty) {
-                          showAlertModal(context, "Please enter a valid email");
-                          return;
-                        } else if (passwordController.text.length < 8) {
-                          showAlertModal(context,
-                              "Your password must be longer than 8 characters");
-                          return;
-                        } else if (passwordController.text !=
-                            passwordConfirmController.text) {
-                          showAlertModal(context, "Passwords don't match");
-                          return;
-                        }
-                        signUserUp();
-                        showSuccessModal(
-                            context, "AccountInfo updated Succefully!");
-                        updateIsEditting();
-                      },
-                      style: buttonStyle(16),
-                      child:
-                          setText("Save", FontWeight.w600, 15.sp, Colors.white),
-                    ),
+                  AppButton(
+                    function: () {
+                      if (!isEditting) return;
+                      bool emailValid = RegExp(
+                              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                          .hasMatch(emailController.text.toString());
+                      if (emailController.text.isEmpty ||
+                          nameController.text.isEmpty ||
+                          passwordController.text.isEmpty ||
+                          passwordController.text.isEmpty) {
+                        showAlertModal(context, "Please fill all fields");
+                        return;
+                      } else if (!emailValid || emailController.text.isEmpty) {
+                        showAlertModal(context, "Please enter a valid email");
+                        return;
+                      } else if (passwordController.text.length < 8) {
+                        showAlertModal(context,
+                            "Your password must be longer than 8 characters");
+                        return;
+                      } else if (passwordController.text !=
+                          passwordConfirmController.text) {
+                        showAlertModal(context, "Passwords don't match");
+                        return;
+                      }
+                      signUserUp();
+                      showSuccessModal(
+                          context, "AccountInfo updated Succefully!");
+                      updateIsEditting();
+                    },
+                    height: 7.h,
+                    width: 90.w,
+                    color: primaryPurple,
+                    text: "Save",
+                    icon: FontAwesomeIcons.floppyDisk,
                   ),
                   SizedBox(
                     height: 2.h,

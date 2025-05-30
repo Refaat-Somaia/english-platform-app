@@ -29,6 +29,8 @@ class _SettingsState extends State<Settings> {
     slides[0] = preferences.getBool("isDarkMode") == true ? offsetX : 0.3;
     slides[3] = offsetX;
     slides[4] = preferences.getBool("isInGameSounds") == true ? offsetX : 0.3;
+    slides[5] =
+        preferences.getBool("isShowUserInterests") == true ? offsetX : 0.3;
   }
 
   Widget build(BuildContext context) {
@@ -112,6 +114,11 @@ class _SettingsState extends State<Settings> {
                               Icons.volume_mute_rounded, () {
                             preferences.setBool("isInGameSounds",
                                 !preferences.getBool("isInGameSounds")!);
+                          }),
+                          optionContainer(5, "Show my intrests to others",
+                              Icons.interests_rounded, () {
+                            preferences.setBool("isShowUserInterests",
+                                !preferences.getBool("isShowUserInterests")!);
                           }),
                         ]))))
               ])

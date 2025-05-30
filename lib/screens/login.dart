@@ -4,8 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/body.dart';
+import 'package:funlish_app/components/appButton.dart';
+import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/signUp/signUp.dart';
 import 'package:get/utils.dart';
@@ -51,7 +54,7 @@ class _LoginState extends State<Login> {
                   Animate(
                     child: Image.asset(
                       'assets/images/login.png',
-                      height: 30.h,
+                      height: 27.h,
                     ),
                   )
                       .slideY(
@@ -65,11 +68,8 @@ class _LoginState extends State<Login> {
                   ),
                   Animate(
                           child: setText("Welcome back!", FontWeight.w600,
-                              20.sp, fontColor))
+                              19.sp, fontColor))
                       .fadeIn(delay: 500.ms),
-                  SizedBox(
-                    height: 0.6.h,
-                  ),
                   Animate(
                     child: setText("Log into your account", FontWeight.w500,
                         14.sp, fontColor.withOpacity(0.5)),
@@ -80,7 +80,7 @@ class _LoginState extends State<Login> {
                   Animate(
                     child: Container(
                       width: 90.w,
-                      height: 6.5.h,
+                      height: 7.h,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
@@ -131,7 +131,7 @@ class _LoginState extends State<Login> {
                   Animate(
                     child: Container(
                       width: 90.w,
-                      height: 6.5.h,
+                      height: 7.h,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
@@ -199,53 +199,41 @@ class _LoginState extends State<Login> {
                     height: 4.h,
                   ),
                   Animate(
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: primaryPurple),
-                      width: 89.w,
-                      height: 6.5.h,
-                      child: TextButton(
-                        onPressed: () {
-                          if (emailController.text.trim() == "test") {
-                            preferences.setString("userName", "guest");
-                            preferences.setBool("isLoggedIn", true);
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => Body(
-                                        pageIndex: 0,
-                                      )),
-                              (route) => false,
-                            );
-                            return;
-                          }
-                          bool emailValid = RegExp(
-                                  r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                              .hasMatch(emailController.text.toString());
-                          if (!emailValid || emailController.text.isEmpty) {
-                            _showModalBottomSheet(
-                                context, "Please enter a valid email");
-                            return;
-                          } else if (passwordController.text.length < 8) {
-                            _showModalBottomSheet(
-                                context, "Please enter a valid password");
-                            return;
-                          }
-                          Navigator.pushReplacement(
-                            context,
-                            CupertinoPageRoute(
-                                builder: (context) => const AfterSignUp()),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                            backgroundColor: primaryPurple,
-                            padding: EdgeInsets.all(0)),
-                        child: setText(
-                            "Login", FontWeight.w600, 15.sp, Colors.white),
-                      ),
-                    ),
-                  ).fadeIn(delay: 700.ms),
+                          child: AppButton(
+                              function: () {
+                                if (emailController.text.trim() == "test") {
+                                  preferences.setString("userName", "guest");
+                                  preferences.setBool("isLoggedIn", true);
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => Body(
+                                              pageIndex: 0,
+                                            )),
+                                    (route) => false,
+                                  );
+                                  return;
+                                }
+                                bool emailValid = RegExp(
+                                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                    .hasMatch(emailController.text.toString());
+                                if (!emailValid ||
+                                    emailController.text.isEmpty) {
+                                  _showModalBottomSheet(
+                                      context, "Please enter a valid email");
+                                  return;
+                                } else if (passwordController.text.length < 8) {
+                                  _showModalBottomSheet(
+                                      context, "Please enter a valid password");
+                                  return;
+                                }
+                                logUserIn();
+                              },
+                              height: 7.h,
+                              width: 90.w,
+                              color: primaryPurple,
+                              text: "Log in"))
+                      .fadeIn(delay: 700.ms),
                   SizedBox(
                     height: 2.h,
                   ),
@@ -275,16 +263,43 @@ class _LoginState extends State<Login> {
   }
 
   void logUserIn() async {
-    var response = await http.post(
-      Uri.parse('$serverIp/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailController.text.trim(),
-        'password': passwordController.text,
-      }),
-    );
-    if(response.statusCode==200){
-      
+    try {
+      var response = await http
+          .post(
+            Uri.parse('${dotenv.env['API_URL']}/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': emailController.text.trim(),
+              'password': passwordController.text,
+            }),
+          )
+          .timeout(Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        print(response.body);
+        String? token = jsonDecode(response.body)['data']['access_token'];
+        if (token == null) {
+          handleError("An error occured while logging in");
+          return;
+        }
+        print(token);
+        preferences.setString("userToken", token);
+        response = await http.get(
+          Uri.parse('${dotenv.env['API_URL']}/items/me'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ${preferences.getString("userToken")}'
+          },
+        );
+        print(response.body);
+
+        // Navigator.pushReplacement(
+        //   context,
+        //   CupertinoPageRoute(builder: (context) => const AfterSignUp()),
+        // );
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -330,5 +345,11 @@ class _LoginState extends State<Login> {
         );
       },
     );
+  }
+
+  void handleError(String text, [error]) {
+    print(error);
+
+    showAlertModal(context, text);
   }
 }

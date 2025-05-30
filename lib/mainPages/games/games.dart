@@ -1,11 +1,8 @@
-import 'package:dart_ping/dart_ping.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/mainPages/games/gameIntro.dart';
 import 'package:funlish_app/utility/global.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:lottie/lottie.dart';
 import 'package:sizer/sizer.dart';
 
@@ -21,7 +18,7 @@ class _GamesState extends State<Games> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: bodyColor,
-        body: Container(
+        body: SizedBox(
           width: 100.w,
           height: 94.h,
           child: SingleChildScrollView(

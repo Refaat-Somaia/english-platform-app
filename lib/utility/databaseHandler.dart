@@ -90,24 +90,7 @@ Future<void> openDB() async {
         await insertDefaultGamesStats(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 7) {
-          await insertGameStats(
-              db,
-              GameStat(
-                  id: Uuid().v4(),
-                  gameName: "Speedy Translator",
-                  wins: 0,
-                  score: 0,
-                  timesPlayed: 0));
-          await insertGameStats(
-              db,
-              GameStat(
-                  id: Uuid().v4(),
-                  gameName: "Random",
-                  wins: 0,
-                  score: 0,
-                  timesPlayed: 0));
-        }
+        if (oldVersion < 7) {}
       },
       onOpen: (db) async {
         debugPrint("Database is now open.");
@@ -549,4 +532,14 @@ Future<void> deleteDatabaseFile() async {
   final dbPath = join(await getDatabasesPath(), 'funlish_app.db');
   await deleteDatabase(dbPath);
   debugPrint("Database deleted!");
+}
+
+Future<void> clearDatabase() async {
+  final db = await database;
+
+  await db?.delete("chapters");
+  await db?.delete("gamesStats");
+  await db?.delete("powerUps");
+  await db?.delete("learnedWords");
+  await db?.delete("mcqLevels");
 }

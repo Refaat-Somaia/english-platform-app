@@ -136,7 +136,7 @@ class _LevelsMenuState extends State<LevelsMenu> {
                           children: [
                             Animate(
                               child: Image.asset(
-                                'assets/images/${widget.chapter.name.toLowerCase()}/${widget.chapter.name.toLowerCase()}1.png',
+                                'assets/images/chapters/${widget.chapter.name.toLowerCase()}/${widget.chapter.name.toLowerCase()}1.png',
                                 width: 45.w,
                               ),
                             )

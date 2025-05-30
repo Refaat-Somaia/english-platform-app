@@ -32,12 +32,23 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
     await openDB();
     preferences = await SharedPreferences.getInstance();
     chapters = await getChaptersFromDB();
+    if (chapters.isEmpty) {
+      final db = await database;
+
+      await insertChapters(db!);
+      await insertMcqLevels(db);
+      await insertDefaultPowerUps(db); // Ensure power-ups are preloaded
+      await insertDefaultGamesStats(db);
+      chapters = await getChaptersFromDB();
+    }
 
     setState(() {});
     Future.delayed(const Duration(seconds: 2), () async {
       if (preferences.getBool("isDarkMode") == null) {
         preferences.setBool("isDarkMode", false);
+        preferences.setStringList("userChapters", ["1", "4", "5", "6"]);
         preferences.setBool("isInGameSounds", true);
+        preferences.setBool("isShowUserInterests", true);
       } else if (preferences.getBool("isDarkMode") == true) {
         bodyColor = Color.fromARGB(255, 23, 16, 39);
         fontColor = Color(0xffF9F7FF);

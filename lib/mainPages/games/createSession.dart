@@ -148,7 +148,7 @@ class _CreatesessionState extends State<Createsession> {
                                     ),
                                   );
                                   showSuccessModal(
-                                      context, "Code copied to Clipboard");
+                                      context, "Code was copied to Clipboard");
                                 },
                                 style: OutlinedButton.styleFrom(
                                     padding: EdgeInsets.zero,

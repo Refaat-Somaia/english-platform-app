@@ -7,6 +7,7 @@ import '../utility/global.dart';
 class InterestCard extends StatefulWidget {
   final String title;
   final Function addInterest;
+  final Function removeInterest;
   final IconData icon;
   final int index;
 
@@ -14,6 +15,7 @@ class InterestCard extends StatefulWidget {
     Key? key,
     required this.title,
     required this.addInterest,
+    required this.removeInterest,
     required this.icon,
     required this.index,
   }) : super(key: key);
@@ -37,6 +39,7 @@ class _InterestCardState extends State<InterestCard> {
                 })
               : setState(() {
                   isPressed = false;
+                  widget.removeInterest(widget.title);
                 });
 
           //     widget.userInterests.remove(widget.title);
@@ -66,12 +69,8 @@ class _InterestCardState extends State<InterestCard> {
               SizedBox(
                 height: 0.5.h,
               ),
-              setText(
-                widget.title,
-                FontWeight.w600,
-                14.sp,
-                fontColor.withOpacity(0.8),
-              ),
+              setText(widget.title, FontWeight.w600, 14.sp,
+                  fontColor.withOpacity(0.8), true),
             ],
           ),
         ),

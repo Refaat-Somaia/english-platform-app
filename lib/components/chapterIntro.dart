@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/mainPages/chapters/levelsMenu.dart';
 import 'package:funlish_app/model/Chapter.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
@@ -14,10 +15,12 @@ class Chapterintro extends StatefulWidget {
   final List<String> imagesList;
   final Chapter chapter;
   final String blobPath;
+  final bool isLocked;
 
   const Chapterintro(
       {super.key,
       required this.imagesList,
+      required this.isLocked,
       required this.chapter,
       required this.blobPath});
 
@@ -95,188 +98,214 @@ class _ChapterintroState extends State<Chapterintro>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        SizedBox(
-          height: 10.h,
-        ),
-        // setText(
-        //     "Chpater", FontWeight.w600, 15.sp, fontColor.withOpacity(0.5)),
-        Animate(
-          child: SizedBox(
-            width: 90.w,
-            child: setText(
-              widget.chapter.name,
-              FontWeight.w800,
-              21.sp,
-              widget.chapter.colorAsColor,
-              true,
-            ),
-          ),
-        ).fadeIn(duration: 600.ms, begin: 0, delay: 200.ms),
-
-        Animate(
-          child: SizedBox(
-            width: 90.w,
-            child: setText(
-              widget.chapter.description,
-              FontWeight.w600,
-              13.sp,
-              fontColor.withOpacity(0.5),
-              true,
-            ),
-          ),
-        ).fadeIn(begin: 0, delay: 600.ms),
-        SizedBox(
-          height: 2.h,
-        ),
-        SizedBox(
-          height: 35.h,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Background Circle
-              Center(
-                child: Container(
-                  height: 35.h,
-                  child: Image.asset(widget.blobPath),
-                ),
-              ),
-              Positioned(
-                left: 13.w,
-                bottom: 30.h,
-                child: Container(
-                  width: 4.w,
-                  height: 4.w,
-                  decoration: BoxDecoration(
-                      // shape: BoxShape.circle,
-                      ),
-                  child: Transform.flip(
-                    flipX: true,
-                    child: Icon(
-                      Icons.bubble_chart,
-                      size: 12.w,
-                      color: widget.chapter.colorAsColor,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 20.w,
-                bottom: 26.h,
-                child: Container(
-                  width: 4.w,
-                  height: 4.w,
-                  decoration: BoxDecoration(
-                    color: widget.chapter.colorAsColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-
-              AnimatedBuilder(
-                animation: _hoverAnimation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, _hoverAnimation.value),
-                    child: child,
-                  );
-                },
-                child: Animate(
-                  child: Image.asset(
-                    widget.imagesList[_currentImageIndex],
-                    height: 22.h,
-                  ),
-                )
-                    .animate(controller: _scaleController)
-                    .scale(
-                      begin: const Offset(0, 0),
-                      end: const Offset(1.1, 1.1),
-                      curve: Curves.easeOut,
-                      duration: 500.ms,
-                    )
-                    .scale(
-                      begin: const Offset(1.1, 1.1),
-                      end: const Offset(0.9, 0.9),
-                      curve: Curves.easeOut,
-                      duration: 500.ms,
-                    ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 3.h,
-        ),
-        setText("Chapter progress", FontWeight.w600, 14.sp,
-            fontColor.withOpacity(0.6)),
-        SizedBox(
-          height: 1.h,
-        ),
-        Stack(
+        Column(
           children: [
+            SizedBox(
+              height: 10.h,
+            ),
+            // setText(
+            //     "Chpater", FontWeight.w600, 15.sp, fontColor.withOpacity(0.5)),
+            Animate(
+              child: SizedBox(
+                width: 90.w,
+                child: setText(
+                  widget.chapter.name,
+                  FontWeight.w800,
+                  21.sp,
+                  widget.chapter.colorAsColor,
+                  true,
+                ),
+              ),
+            ).fadeIn(duration: 600.ms, begin: 0, delay: 200.ms),
+
+            Animate(
+              child: SizedBox(
+                width: 90.w,
+                child: setText(
+                  widget.chapter.description,
+                  FontWeight.w600,
+                  13.sp,
+                  fontColor.withOpacity(0.5),
+                  true,
+                ),
+              ),
+            ).fadeIn(begin: 0, delay: 600.ms),
+            SizedBox(
+              height: 2.h,
+            ),
+            SizedBox(
+              height: 35.h,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Background Circle
+                  Center(
+                    child: Container(
+                      height: 35.h,
+                      child: Image.asset(widget.blobPath),
+                    ),
+                  ),
+                  Positioned(
+                    left: 13.w,
+                    bottom: 30.h,
+                    child: Container(
+                      width: 4.w,
+                      height: 4.w,
+                      decoration: BoxDecoration(
+                          // shape: BoxShape.circle,
+                          ),
+                      child: Transform.flip(
+                        flipX: true,
+                        child: Icon(
+                          Icons.bubble_chart,
+                          size: 12.w,
+                          color: widget.chapter.colorAsColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 20.w,
+                    bottom: 26.h,
+                    child: Container(
+                      width: 4.w,
+                      height: 4.w,
+                      decoration: BoxDecoration(
+                        color: widget.chapter.colorAsColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+
+                  AnimatedBuilder(
+                    animation: _hoverAnimation,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(0, _hoverAnimation.value),
+                        child: child,
+                      );
+                    },
+                    child: Animate(
+                      child: Image.asset(
+                        widget.imagesList[_currentImageIndex],
+                        height: 22.h,
+                      ),
+                    )
+                        .animate(controller: _scaleController)
+                        .scale(
+                          begin: const Offset(0, 0),
+                          end: const Offset(1.1, 1.1),
+                          curve: Curves.easeOut,
+                          duration: 500.ms,
+                        )
+                        .scale(
+                          begin: const Offset(1.1, 1.1),
+                          end: const Offset(0.9, 0.9),
+                          curve: Curves.easeOut,
+                          duration: 500.ms,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 3.h,
+            ),
+            setText("Chapter progress", FontWeight.w600, 14.sp,
+                fontColor.withOpacity(0.6)),
+            SizedBox(
+              height: 1.h,
+            ),
+            Stack(
+              children: [
+                Container(
+                  width: 80.w,
+                  height: 1.5.h,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      color: widget.chapter.colorAsColor.withOpacity(0.3)),
+                ),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                  width: _width,
+                  height: 1.5.h,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      color: widget.chapter.colorAsColor),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 1.h,
+            ),
+            setText("${(progress * 100).ceil()}%", FontWeight.w600, 14.sp,
+                fontColor.withOpacity(0.6)),
+            SizedBox(
+              height: 5.h,
+            ),
             Container(
-              width: 80.w,
-              height: 1.5.h,
+              width: 40.w,
+              height: 7.h,
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  color: widget.chapter.colorAsColor.withOpacity(0.3)),
-            ),
-            AnimatedContainer(
-              duration: Duration(milliseconds: 500),
-              curve: Curves.easeOut,
-              width: _width,
-              height: 1.5.h,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  color: widget.chapter.colorAsColor),
-            ),
+                borderRadius: BorderRadius.circular(32),
+                color: widget.isLocked
+                    ? widget.chapter.colorAsColor.withOpacity(0.2)
+                    : widget.chapter.colorAsColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.chapter.colorAsColor.withOpacity(
+                        preferences.getBool("isDarkMode") == true ? 0.1 : 0.5),
+                    spreadRadius: 0.01.h,
+                    blurRadius: 8,
+                    offset: const Offset(0, 7),
+                  )
+                ],
+              ),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (BuildContext context) => LevelsMenu(
+                          chapter: widget.chapter,
+                          update: updateChpaters,
+                        ),
+                      ));
+                },
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                child: Center(
+                    child: setText(
+                        widget.chapter.levelsPassed == 0 ? "Begin" : "Continue",
+                        FontWeight.w600,
+                        16.sp,
+                        Colors.white)),
+              ),
+            )
           ],
         ),
-        SizedBox(
-          height: 1.h,
-        ),
-        setText("${(progress * 100).ceil()}%", FontWeight.w600, 14.sp,
-            fontColor.withOpacity(0.6)),
-        SizedBox(
-          height: 5.h,
-        ),
-        Container(
-          width: 40.w,
-          height: 7.h,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32),
-            color: widget.chapter.colorAsColor,
-            boxShadow: [
-              BoxShadow(
-                color: widget.chapter.colorAsColor.withOpacity(
-                    preferences.getBool("isDarkMode") == true ? 0.1 : 0.5),
-                spreadRadius: 0.01.h,
-                blurRadius: 8,
-                offset: const Offset(0, 7),
-              )
-            ],
+        if (widget.isLocked)
+          Container(
+            width: 100.w,
+            height: 100.h,
+            color: Colors.black.withOpacity(0.3),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 2.h,
+              children: [
+                Icon(
+                  FontAwesomeIcons.lock,
+                  color: const Color.fromARGB(255, 225, 225, 225),
+                  size: 25.w,
+                ),
+                setText("Unlock Chapter from the store", FontWeight.w600, 15.sp,
+                    Colors.white, true)
+              ],
+            ),
           ),
-          child: TextButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (BuildContext context) => LevelsMenu(
-                      chapter: widget.chapter,
-                      update: updateChpaters,
-                    ),
-                  ));
-            },
-            style: TextButton.styleFrom(padding: EdgeInsets.zero),
-            child: Center(
-                child: setText(
-                    widget.chapter.levelsPassed == 0 ? "Begin" : "Continue",
-                    FontWeight.w600,
-                    16.sp,
-                    Colors.white)),
-          ),
-        )
       ],
     );
   }

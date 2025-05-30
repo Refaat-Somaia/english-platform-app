@@ -26,9 +26,11 @@ class Inputlevel extends StatefulWidget {
   final Color color;
   final bool playAgain;
   final GameStat gameStat;
+  final Function updateStats;
   const Inputlevel(
       {super.key,
       required this.gameStat,
+      required this.updateStats,
       required this.color,
       required this.playAgain});
 
@@ -55,7 +57,7 @@ class _InputlevelState extends State<Inputlevel>
   bool isTimeUp = false;
   bool isCountDown = false;
   bool isWon = false;
-  int timerDuration = 20;
+  int timerDuration = 25;
   bool isLost = false;
   bool isDraw = false;
   bool isFirst = true;
@@ -136,6 +138,7 @@ class _InputlevelState extends State<Inputlevel>
         wins: widget.gameStat.wins,
         score: widget.gameStat.score,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
   }
 
   void updatePlayers(List<Player> newPlayers) {
@@ -243,6 +246,7 @@ class _InputlevelState extends State<Inputlevel>
         wins: widget.gameStat.wins + 1,
         score: widget.gameStat.score + 50,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
 
     setState(() {
       isWon = true;
@@ -264,6 +268,7 @@ class _InputlevelState extends State<Inputlevel>
         wins: widget.gameStat.wins,
         score: widget.gameStat.score + 25,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
   }
 
   @override
@@ -957,6 +962,7 @@ class _InputlevelState extends State<Inputlevel>
                   color: widget.color,
                   playAgain: true,
                   gameStat: widget.gameStat,
+                  updateStats: widget.updateStats,
                 )));
   }
 

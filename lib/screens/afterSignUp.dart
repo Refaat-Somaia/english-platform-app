@@ -32,9 +32,9 @@ class _AfterSignUpState extends State<AfterSignUp> {
       pages = [
         Gender(gender: gender),
         Interests(
-          userInterests: userInterests,
-          addInterest: addInterest,
-        ),
+            userInterests: userInterests,
+            addInterest: addInterest,
+            removeInterest: removeInterest),
         Quiz()
       ];
     });
@@ -44,7 +44,12 @@ class _AfterSignUpState extends State<AfterSignUp> {
     setState(() {
       userInterests.add(interest);
     });
-    print(userInterests);
+  }
+
+  void removeInterest(String interest) {
+    setState(() {
+      userInterests.remove(interest);
+    });
   }
 
   @override

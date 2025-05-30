@@ -29,10 +29,12 @@ extension Shuffle on String {
 class Puzzlelevel extends StatefulWidget {
   final Color color;
   final bool playAgain;
+  final Function updateStats;
   final GameStat gameStat;
   const Puzzlelevel(
       {super.key,
       required this.gameStat,
+      required this.updateStats,
       required this.color,
       required this.playAgain});
 
@@ -130,6 +132,8 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         wins: widget.gameStat.wins,
         score: widget.gameStat.score,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
+
     timer.cancel();
   }
 
@@ -169,6 +173,8 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         score: widget.gameStat.score + 50,
         timesPlayed: widget.gameStat.timesPlayed + 1));
     socketService.sendMessage(socketService.matchid, "", "IWON");
+    widget.updateStats();
+
     timer.cancel();
   }
 
@@ -185,6 +191,8 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         wins: widget.gameStat.wins,
         score: widget.gameStat.score + 25,
         timesPlayed: widget.gameStat.timesPlayed + 1));
+    widget.updateStats();
+
     timer.cancel();
   }
 
@@ -657,6 +665,7 @@ class _PuzzlelevelState extends State<Puzzlelevel>
         CupertinoPageRoute(
             builder: (BuildContext context) => Puzzlelevel(
                   color: widget.color,
+                  updateStats: widget.updateStats,
                   playAgain: true,
                   gameStat: widget.gameStat,
                 )));

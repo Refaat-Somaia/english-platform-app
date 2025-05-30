@@ -17,7 +17,6 @@ import 'package:funlish_app/mainPages/menu/leaderboard.dart';
 import 'package:funlish_app/mainPages/menu/settings.dart';
 import 'package:funlish_app/mainPages/menu/stats.dart';
 import 'package:funlish_app/mainPages/menu/shop.dart';
-import 'package:funlish_app/model/appTimer.dart';
 import 'package:funlish_app/model/learnedWord.dart';
 import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/databaseHandler.dart';
@@ -52,8 +51,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   List<Learnedword> flashCardsWord = [];
   ValueNotifier<int> activeIndex = ValueNotifier<int>(0);
   ValueNotifier<int> activeIndex2 = ValueNotifier<int>(0);
-  List<Map<String, dynamic>> sessionLogs = [];
-  SessionTracker sessionTracker = SessionTracker();
 
   @override
   void initState() {
@@ -61,7 +58,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     _animationController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 300));
     getChapter();
-    sessionTracker.startSession();
     welcomeMsg = getWelcomeMessage();
     getUserName();
     initSwiperPage();
@@ -77,9 +73,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   void generateGift() {
     if (preferences.getBool("isShownGift") == true) return;
-
-    Timer(Duration(seconds: 1), () {
-      showGiftModal(context);
+    Timer(Duration(milliseconds: 1500), () {
+      if (mounted) {
+        showGiftModal(context);
+      }
     });
   }
 
@@ -119,8 +116,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     // TODO: implement dispose
     super.dispose();
     _animationController.dispose();
-    final session = sessionTracker.endSession();
-    sessionTracker.saveSessionLog(session);
   }
 
   void getChapter() async {
@@ -375,7 +370,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         progressColor: _chapter.colorAsColor,
                                         percent: progress,
                                         center: Image.asset(
-                                          'assets/images/${_chapter.name.toLowerCase()}/${_chapter.name.toLowerCase()}1.png',
+                                          'assets/images/chapters/${_chapter.name.toLowerCase()}/${_chapter.name.toLowerCase()}1.png',
                                           width: 15.w,
                                         ),
                                       ),
@@ -387,7 +382,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         height: 7.h,
                                         child: _chapter.levelsPassed > 0
                                             ? setText(
-                                                "You're ${(progress * 100).ceil()}% through the '${_chapter.name}' chapter! Keep it up!",
+                                                "You're ${(progress * 100).ceil()}% through the ${_chapter.name} chapter! Keep it up!",
                                                 FontWeight.w600,
                                                 13.sp,
                                                 fontColor.withOpacity(0.8),
@@ -441,34 +436,46 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         color: primaryPurple.withOpacity(0.1),
                                         borderRadius:
                                             BorderRadius.circular(18)),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        CircularPercentIndicator(
-                                            radius: 9.w,
-                                            backgroundColor:
-                                                fontColor.withOpacity(0.2),
-                                            progressColor: primaryPurple,
-                                            percent:
-                                                user.xp / user.xpForNextLevel(),
-                                            center: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                setText(
-                                                    user.level.toString(),
-                                                    FontWeight.bold,
-                                                    18.sp,
-                                                    fontColor),
-                                                setText(
-                                                    "Level",
-                                                    FontWeight.w600,
-                                                    12.sp,
-                                                    fontColor.withOpacity(0.6))
-                                              ],
-                                            )),
-                                      ],
+                                    child: TextButton(
+                                      style: buttonStyle(18),
+                                      onPressed: () {
+                                        Navigator.push(
+                                            context,
+                                            CupertinoPageRoute(
+                                                builder:
+                                                    (BuildContext context) =>
+                                                        Account()));
+                                      },
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          CircularPercentIndicator(
+                                              radius: 9.w,
+                                              backgroundColor:
+                                                  fontColor.withOpacity(0.2),
+                                              progressColor: primaryPurple,
+                                              percent: user.xp /
+                                                  user.xpForNextLevel(),
+                                              center: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  setText(
+                                                      user.level.toString(),
+                                                      FontWeight.bold,
+                                                      18.sp,
+                                                      fontColor),
+                                                  setText(
+                                                      "Level",
+                                                      FontWeight.w600,
+                                                      12.sp,
+                                                      fontColor
+                                                          .withOpacity(0.6))
+                                                ],
+                                              )),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   SizedBox(
@@ -481,31 +488,42 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                         color: primaryPurple.withOpacity(0.1),
                                         borderRadius:
                                             BorderRadius.circular(18)),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              FontAwesomeIcons.coins,
-                                              color: primaryPurple,
-                                            ),
-                                            setText(
-                                                "${user.points}",
-                                                FontWeight.w600,
-                                                16.sp,
-                                                fontColor.withOpacity(1)),
-                                            setText(
-                                                "Points",
-                                                FontWeight.w600,
-                                                12.sp,
-                                                fontColor.withOpacity(0.6)),
-                                          ],
-                                        ),
-                                      ],
+                                    child: TextButton(
+                                      style: buttonStyle(18),
+                                      onPressed: () {
+                                        Navigator.push(
+                                            context,
+                                            CupertinoPageRoute(
+                                                builder:
+                                                    (BuildContext context) =>
+                                                        Account()));
+                                      },
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                FontAwesomeIcons.coins,
+                                                color: primaryPurple,
+                                              ),
+                                              setText(
+                                                  "${user.points}",
+                                                  FontWeight.w600,
+                                                  16.sp,
+                                                  fontColor.withOpacity(1)),
+                                              setText(
+                                                  "Points",
+                                                  FontWeight.w600,
+                                                  12.sp,
+                                                  fontColor.withOpacity(0.6)),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -758,16 +776,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             ),
                           );
                         }),
-                        NavButton(
-                            "Schedule", Icons.date_range_rounded, primaryPurple,
-                            () {
-                          final notiService = NotiService();
-
-                          notiService.showNotification(
-                            title: "Leveled Up!",
-                            body: "You have reached level congratulations!",
-                          );
-                        }),
+                        NavButton("Chatbot", FontAwesomeIcons.robot,
+                            primaryPurple, () {}),
                         NavButton(
                             "Store", FontAwesomeIcons.store, primaryPurple, () {
                           Navigator.push(
@@ -1065,13 +1075,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           color: primaryPurple),
                       child: TextButton(
                           onPressed: () {
-                            Gameintro(
-                              gameName: "Word Puzzle",
-                              color: const Color.fromARGB(255, 90, 63, 151),
-                              text:
-                                  "Each player is given scattered letters on the screen. They must rearrange them to form a word. The fastest player to solve 4 words wins!",
-                              path: "assets/animations/puzle.json",
-                            );
+                            Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                    builder: (BuildContext context) =>
+                                        Gameintro(
+                                          gameName: "Word Puzzle",
+                                          color: const Color.fromARGB(
+                                              255, 90, 63, 151),
+                                          text:
+                                              "Each player is given scattered letters on the screen. They must rearrange them to form a word. The fastest player to solve 4 words wins!",
+                                          path: "assets/animations/puzzle.json",
+                                        )));
                           },
                           child: setText(
                               "Play", FontWeight.w600, 14.sp, Colors.white)),
@@ -1123,13 +1138,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                           color: primaryPurple),
                       child: TextButton(
                           onPressed: () {
-                            Gameintro(
-                              gameName: "Castle Escape",
-                              color: const Color.fromARGB(255, 48, 79, 139),
-                              text:
-                                  "Each player is trapped in a virtual castle 🏰. To escape, they must solve grammar puzzles, fix incorrect sentences, or choose the right words.",
-                              path: "assets/animations/castle.json",
-                            );
+                            Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                    builder: (BuildContext context) =>
+                                        Gameintro(
+                                          gameName: "Castle Escape",
+                                          color: const Color.fromARGB(
+                                              255, 48, 79, 139),
+                                          text:
+                                              "Each player is trapped in a virtual castle 🏰. To escape, they must solve grammar puzzles, fix incorrect sentences, or choose the right words.",
+                                          path: "assets/animations/castle.json",
+                                        )));
                           },
                           child: setText(
                               "Play", FontWeight.w600, 14.sp, Colors.white)),
