@@ -154,10 +154,6 @@ class _InputlevelState extends State<Inputlevel>
     playSound("audio/tick.mp3");
 
     timer = Timer.periodic(Duration(seconds: 1), (time) {
-      print(time.tick);
-      print(isFirst); // Corrected from `timer.tick`
-      // Corrected from `timer.tick`
-
       if (time.tick <= timerDuration) {
         if (mounted) {
           setState(() {

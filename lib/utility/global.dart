@@ -17,9 +17,6 @@ Color fontColor = const Color(0xff32356D);
 
 final player = AudioPlayer();
 
-String serverIp = 'http://192.168.110.1:8055';
-String gameServerIp = "https://funlish-games-server.onrender.com";
-// String gameServerIp = "http://192.168.110.1:3000";
 const List<Color> colors = [
   Color.fromARGB(255, 48, 212, 234),
   Color(0xffFFCC70),
