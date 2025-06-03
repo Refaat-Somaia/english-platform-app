@@ -22,7 +22,7 @@ class Friendslist extends StatefulWidget {
 
 class _FriendslistState extends State<Friendslist>
     with SingleTickerProviderStateMixin {
-  bool isLoading = false;
+  bool isLoading = true;
   TextEditingController searchController = TextEditingController();
   late AnimationController animationController;
 

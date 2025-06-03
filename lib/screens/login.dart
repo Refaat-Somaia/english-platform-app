@@ -9,13 +9,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/body.dart';
 import 'package:funlish_app/components/appButton.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
+import 'package:funlish_app/model/userProgress.dart';
 import 'package:funlish_app/utility/global.dart';
 import 'package:funlish_app/signUp/signUp.dart';
-import 'package:get/utils.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
+
 import 'package:sizer/sizer.dart';
 import 'package:http/http.dart' as http;
-
-import 'afterSignUp.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -29,6 +30,7 @@ class _LoginState extends State<Login> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -43,226 +45,256 @@ class _LoginState extends State<Login> {
           width: 100.w,
           height: 100.h,
           color: bodyColor,
-          child: SingleChildScrollView(
-            child: Form(
-              key: formField,
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 8.h,
+          child: isLoading
+              ? Animate(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      LoadingAnimationWidget.fallingDot(
+                          color: primaryPurple, size: 18.w),
+                      SizedBox(height: 1.h),
+                      setText(
+                          "Please wait...", FontWeight.w600, 16.sp, fontColor),
+                    ],
                   ),
-                  Animate(
-                    child: Image.asset(
-                      'assets/images/login.png',
-                      height: 27.h,
-                    ),
-                  )
-                      .slideY(
-                          begin: -0.2,
-                          end: 0,
-                          curve: Curves.easeOut,
-                          delay: 200.ms)
-                      .fadeIn(),
-                  SizedBox(
-                    height: 5.h,
-                  ),
-                  Animate(
-                          child: setText("Welcome back!", FontWeight.w600,
-                              19.sp, fontColor))
-                      .fadeIn(delay: 500.ms),
-                  Animate(
-                    child: setText("Log into your account", FontWeight.w500,
-                        14.sp, fontColor.withOpacity(0.5)),
-                  ).fadeIn(delay: 600.ms),
-                  SizedBox(
-                    height: 4.h,
-                  ),
-                  Animate(
-                    child: Container(
-                      width: 90.w,
-                      height: 7.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: fontColor.withOpacity(0.1),
-                          width: 2,
+                ).animate().fadeIn(duration: 400.ms)
+              : SingleChildScrollView(
+                  child: Form(
+                    key: formField,
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 8.h,
                         ),
-                      ),
-                      child: Center(
-                        child: TextFormField(
-                          style: TextStyle(
-                            fontFamily: "magnet",
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            color: fontColor,
+                        Animate(
+                          child: Image.asset(
+                            'assets/images/login.png',
+                            height: 27.h,
                           ),
-                          decoration: InputDecoration(
-                            counterStyle: TextStyle(fontSize: 0),
-                            hintStyle: TextStyle(
-                              fontFamily: "magnet",
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              color: fontColor.withOpacity(0.3),
-                            ),
-                            hintText: "Email",
-                            prefixIcon: Icon(
-                              Icons.email,
-                              size: 6.w,
-                              color: fontColor.withOpacity(0.4),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.only(top: 1.4.h),
-                          ),
-                          controller: emailController,
-                          maxLength: 70,
+                        )
+                            .slideY(
+                                begin: -0.2,
+                                end: 0,
+                                curve: Curves.easeOut,
+                                delay: 200.ms)
+                            .fadeIn(),
+                        SizedBox(
+                          height: 5.h,
                         ),
-                      ),
-                    ),
-                  )
-                      .slideY(
-                          begin: -0.5,
-                          end: 0,
-                          curve: Curves.easeOut,
-                          delay: 700.ms)
-                      .fadeIn(),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                  Animate(
-                    child: Container(
-                      width: 90.w,
-                      height: 7.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: fontColor.withOpacity(0.1),
-                          width: 2,
+                        Animate(
+                                child: setText("Welcome back!", FontWeight.w600,
+                                    19.sp, fontColor))
+                            .fadeIn(delay: 500.ms),
+                        Animate(
+                          child: setText(
+                              "Log into your account",
+                              FontWeight.w500,
+                              14.sp,
+                              fontColor.withOpacity(0.5)),
+                        ).fadeIn(delay: 600.ms),
+                        SizedBox(
+                          height: 4.h,
                         ),
-                      ),
-                      child: Center(
-                        child: Stack(children: [
-                          TextFormField(
-                            style: TextStyle(
-                              fontFamily: "magnet",
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              color: fontColor,
-                            ),
-                            decoration: InputDecoration(
-                              counterStyle: TextStyle(fontSize: 0),
-                              hintStyle: TextStyle(
-                                fontFamily: "magnet",
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w500,
-                                color: fontColor.withOpacity(0.3),
+                        Animate(
+                          child: Container(
+                            width: 90.w,
+                            height: 7.h,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: fontColor.withOpacity(0.1),
+                                width: 2,
                               ),
-                              hintText: "Password",
-                              prefixIcon: Icon(
-                                Icons.lock,
-                                size: 6.w,
-                                color: fontColor.withOpacity(0.4),
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.only(top: 1.4.h),
                             ),
-                            controller: passwordController,
-                            obscureText: !isPasswordVisible,
-                            maxLength: 50,
+                            child: Center(
+                              child: TextFormField(
+                                style: TextStyle(
+                                  fontFamily: "magnet",
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: fontColor,
+                                ),
+                                decoration: InputDecoration(
+                                  counterStyle: TextStyle(fontSize: 0),
+                                  hintStyle: TextStyle(
+                                    fontFamily: "magnet",
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w500,
+                                    color: fontColor.withOpacity(0.3),
+                                  ),
+                                  hintText: "Email",
+                                  prefixIcon: Icon(
+                                    Icons.email,
+                                    size: 6.w,
+                                    color: fontColor.withOpacity(0.4),
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(top: 1.4.h),
+                                ),
+                                controller: emailController,
+                                maxLength: 70,
+                              ),
+                            ),
                           ),
-                          Positioned(
-                            right: 0,
-                            child: IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isPasswordVisible = !isPasswordVisible;
-                                  });
-                                },
-                                icon: Icon(
-                                  isPasswordVisible
-                                      ? Icons.visibility_off
-                                      : Icons.remove_red_eye_rounded,
-                                  size: 6.w,
-                                  color: fontColor.withOpacity(0.4),
-                                )),
-                          )
-                        ]),
-                      ),
-                    ),
-                  )
-                      .slideY(
-                          begin: -0.5,
-                          end: 0,
-                          curve: Curves.easeOut,
-                          delay: 800.ms)
-                      .fadeIn(),
-                  SizedBox(
-                    height: 4.h,
-                  ),
-                  Animate(
-                          child: AppButton(
-                              function: () {
-                                if (emailController.text.trim() == "test") {
-                                  preferences.setString("userName", "guest");
-                                  preferences.setBool("isLoggedIn", true);
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Body(
-                                              pageIndex: 0,
-                                            )),
-                                    (route) => false,
-                                  );
-                                  return;
-                                }
-                                bool emailValid = RegExp(
-                                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                                    .hasMatch(emailController.text.toString());
-                                if (!emailValid ||
-                                    emailController.text.isEmpty) {
-                                  _showModalBottomSheet(
-                                      context, "Please enter a valid email");
-                                  return;
-                                } else if (passwordController.text.length < 8) {
-                                  _showModalBottomSheet(
-                                      context, "Please enter a valid password");
-                                  return;
-                                }
-                                logUserIn();
+                        )
+                            .slideY(
+                                begin: -0.5,
+                                end: 0,
+                                curve: Curves.easeOut,
+                                delay: 700.ms)
+                            .fadeIn(),
+                        SizedBox(
+                          height: 2.h,
+                        ),
+                        Animate(
+                          child: Container(
+                            width: 90.w,
+                            height: 7.h,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: fontColor.withOpacity(0.1),
+                                width: 2,
+                              ),
+                            ),
+                            child: Center(
+                              child: Stack(children: [
+                                TextFormField(
+                                  style: TextStyle(
+                                    fontFamily: "magnet",
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: fontColor,
+                                  ),
+                                  decoration: InputDecoration(
+                                    counterStyle: TextStyle(fontSize: 0),
+                                    hintStyle: TextStyle(
+                                      fontFamily: "magnet",
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: fontColor.withOpacity(0.3),
+                                    ),
+                                    hintText: "Password",
+                                    prefixIcon: Icon(
+                                      Icons.lock,
+                                      size: 6.w,
+                                      color: fontColor.withOpacity(0.4),
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.only(top: 1.4.h),
+                                  ),
+                                  controller: passwordController,
+                                  obscureText: !isPasswordVisible,
+                                  maxLength: 50,
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  child: IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          isPasswordVisible =
+                                              !isPasswordVisible;
+                                        });
+                                      },
+                                      icon: Icon(
+                                        isPasswordVisible
+                                            ? Icons.visibility_off
+                                            : Icons.remove_red_eye_rounded,
+                                        size: 6.w,
+                                        color: fontColor.withOpacity(0.4),
+                                      )),
+                                )
+                              ]),
+                            ),
+                          ),
+                        )
+                            .slideY(
+                                begin: -0.5,
+                                end: 0,
+                                curve: Curves.easeOut,
+                                delay: 800.ms)
+                            .fadeIn(),
+                        SizedBox(
+                          height: 4.h,
+                        ),
+                        Animate(
+                                child: AppButton(
+                                    function: () {
+                                      if (emailController.text.trim() ==
+                                          "test") {
+                                        preferences.setString(
+                                            "userName", "guest");
+                                        preferences.setBool("isLoggedIn", true);
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => Body(
+                                                    pageIndex: 0,
+                                                  )),
+                                          (route) => false,
+                                        );
+                                        return;
+                                      }
+                                      bool emailValid = RegExp(
+                                              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                          .hasMatch(
+                                              emailController.text.toString());
+                                      if (!emailValid ||
+                                          emailController.text.isEmpty) {
+                                        _showModalBottomSheet(context,
+                                            "Please enter a valid email");
+                                        return;
+                                      } else if (passwordController
+                                              .text.length <
+                                          8) {
+                                        _showModalBottomSheet(context,
+                                            "Please enter a valid password");
+                                        return;
+                                      }
+                                      logUserIn();
+                                    },
+                                    height: 7.h,
+                                    width: 90.w,
+                                    color: primaryPurple,
+                                    text: "Log in"))
+                            .fadeIn(delay: 700.ms),
+                        SizedBox(
+                          height: 2.h,
+                        ),
+                        Animate(
+                          child: setText(
+                              "Wait I don't have an account!",
+                              FontWeight.w500,
+                              14.sp,
+                              fontColor.withOpacity(0.5)),
+                        ).fadeIn(delay: 700.ms),
+                        Animate(
+                          child: TextButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  CupertinoPageRoute(
+                                      builder: (context) => const Signup()),
+                                );
                               },
-                              height: 7.h,
-                              width: 90.w,
-                              color: primaryPurple,
-                              text: "Log in"))
-                      .fadeIn(delay: 700.ms),
-                  SizedBox(
-                    height: 2.h,
+                              child: setText("Sign up", FontWeight.w600, 15.sp,
+                                  primaryPurple)),
+                        ).fadeIn(delay: 700.ms)
+                      ],
+                    ),
                   ),
-                  Animate(
-                    child: setText("Wait I don't have an account!",
-                        FontWeight.w500, 14.sp, fontColor.withOpacity(0.5)),
-                  ).fadeIn(delay: 700.ms),
-                  Animate(
-                    child: TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            CupertinoPageRoute(
-                                builder: (context) => const Signup()),
-                          );
-                        },
-                        child: setText(
-                            "Sign up", FontWeight.w600, 15.sp, primaryPurple)),
-                  ).fadeIn(delay: 700.ms)
-                ],
-              ),
-            ),
-          ),
+                ),
         ),
       ),
     );
   }
 
   void logUserIn() async {
+    final user = Provider.of<UserProgress>(context, listen: false);
+
+    setState(() {
+      isLoading = true;
+    });
     try {
       var response = await http
           .post(
@@ -282,24 +314,50 @@ class _LoginState extends State<Login> {
           handleError("An error occured while logging in");
           return;
         }
-        print(token);
+
         preferences.setString("userToken", token);
+
+        final parts = token.split('.');
+
+        final payload =
+            utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+        final Map<String, dynamic> data = jsonDecode(payload);
+
+        final userId = data['id'];
+
         response = await http.get(
-          Uri.parse('${dotenv.env['API_URL']}/items/me'),
+          Uri.parse('${dotenv.env['API_URL']}/users/$userId'),
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${preferences.getString("userToken")}'
+            'Authorization': 'Bearer $token',
           },
-        );
-        print(response.body);
+        ).timeout(Duration(seconds: 10));
+
+        if (response.statusCode == 200) {
+          preferences.setString(
+              "userName", jsonDecode(response.body)['data']['first_name']);
+          response = await http.get(
+            Uri.parse('${dotenv.env['API_URL']}/items/student/?'),
+            headers: {
+              // 'Authorization': 'Bearer $token',
+            },
+          ).timeout(Duration(seconds: 10));
+          print(response.body);
+        }
 
         // Navigator.pushReplacement(
         //   context,
         //   CupertinoPageRoute(builder: (context) => const AfterSignUp()),
         // );
       }
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
-      print(e);
+      handleError("An error occured while logging in");
+
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 

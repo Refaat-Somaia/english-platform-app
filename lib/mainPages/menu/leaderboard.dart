@@ -78,68 +78,84 @@ class _LeaderboardState extends State<Leaderboard>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bodyColor,
-      body: SizedBox(
-          width: 100.w,
-          height: 100.h,
-          child: Stack(alignment: Alignment.center, children: [
-            Positioned(
-              left: 4.w,
-              top: 3.h,
-              child: Container(
-                width: 12.w,
-                height: 12.w,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    // border: Border.all(
-                    //     width: 1.5, color: fontColor.withOpacity(0.2))
-                    color: primaryPurple),
-                child: IconButton(
-                    style: IconButton.styleFrom(padding: EdgeInsets.zero),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: Icon(
-                      Icons.arrow_back_rounded,
-                      size: 7.w,
-                      color: Colors.white,
-                    )),
-              ),
-            ),
-            isLoading
-                ? Animate(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        LoadingAnimationWidget.fallingDot(
-                            color: primaryPurple, size: 18.w),
-                        SizedBox(height: 1.h),
-                        setText("Please wait...", FontWeight.w600, 16.sp,
-                            fontColor),
-                      ],
+        backgroundColor: bodyColor,
+        body: Scaffold(
+          backgroundColor: bodyColor,
+          body: SizedBox(
+            width: 100.w,
+            height: 100.h,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Back button
+                Positioned(
+                  left: 4.w,
+                  top: 3.h,
+                  child: Container(
+                    width: 12.w,
+                    height: 12.w,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: primaryPurple,
                     ),
-                  )
-                    .animate(controller: animationController, autoPlay: false)
-                    .fadeIn(duration: 400.ms)
-                : Animate(
-                    child: Column(children: [
-                      SizedBox(
-                        height: 4.5.h,
+                    child: IconButton(
+                      style: IconButton.styleFrom(padding: EdgeInsets.zero),
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.arrow_back_rounded,
+                        size: 7.w,
+                        color: Colors.white,
                       ),
-                      setText("Leaderboard", FontWeight.w600, 17.sp, fontColor),
-                      SizedBox(
-                        height: 3.h,
-                      ),
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                    ),
+                  ),
+                ),
+
+                // Main content
+                isLoading
+                    ? Animate(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            LoadingAnimationWidget.fallingDot(
+                              color: primaryPurple,
+                              size: 18.w,
+                            ),
+                            SizedBox(height: 1.h),
+                            setText(
+                              "Please wait...",
+                              FontWeight.w600,
+                              16.sp,
+                              fontColor,
+                            ),
+                          ],
+                        ),
+                      )
+                        .animate(
+                          controller: animationController,
+                          autoPlay: false,
+                        )
+                        .fadeIn(duration: 400.ms)
+                    : Animate(
+                        child: Column(
+                          children: [
+                            SizedBox(height: 4.5.h),
+                            setText(
+                              "Leaderboard",
+                              FontWeight.w600,
+                              17.sp,
+                              fontColor,
+                            ),
+                            SizedBox(height: 3.h),
+
+                            // Toggle between Weekly/All time
                             Container(
                               width: 85.w,
                               height: 6.h,
                               padding: EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(18),
-                                  color: primaryPurple.withOpacity(0.08)),
+                                borderRadius: BorderRadius.circular(18),
+                                color: primaryPurple.withOpacity(0.08),
+                              ),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -149,25 +165,26 @@ class _LeaderboardState extends State<Leaderboard>
                                     width: 40.w,
                                     curve: Curves.ease,
                                     decoration: BoxDecoration(
-                                        color: showWeekly
-                                            ? primaryPurple
-                                            : Colors.transparent,
-                                        borderRadius:
-                                            BorderRadius.circular(16)),
+                                      color: showWeekly
+                                          ? primaryPurple
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
                                     child: TextButton(
                                       onPressed: () {
                                         setState(() {
-                                          showWeekly = !showWeekly;
+                                          showWeekly = true;
                                         });
                                       },
                                       child: Center(
                                         child: setText(
-                                            "Weekly",
-                                            FontWeight.w600,
-                                            14.sp,
-                                            showWeekly
-                                                ? bodyColor
-                                                : fontColor.withOpacity(0.7)),
+                                          "Weekly",
+                                          FontWeight.w600,
+                                          14.sp,
+                                          showWeekly
+                                              ? bodyColor
+                                              : fontColor.withOpacity(0.7),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -176,205 +193,191 @@ class _LeaderboardState extends State<Leaderboard>
                                     width: 40.w,
                                     curve: Curves.ease,
                                     decoration: BoxDecoration(
-                                        // color: const Color.fromARGB(255, 234, 228, 255),
-                                        color: showWeekly
-                                            ? Colors.transparent
-                                            : primaryPurple,
-                                        borderRadius:
-                                            BorderRadius.circular(16)),
+                                      color: showWeekly
+                                          ? Colors.transparent
+                                          : primaryPurple,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
                                     child: TextButton(
                                       onPressed: () {
                                         setState(() {
-                                          showWeekly = !showWeekly;
+                                          showWeekly = false;
                                         });
                                       },
                                       child: Center(
                                         child: setText(
-                                            "All time",
-                                            FontWeight.w600,
-                                            14.sp,
-                                            showWeekly
-                                                ? fontColor.withOpacity(0.7)
-                                                : bodyColor),
+                                          "All time",
+                                          FontWeight.w600,
+                                          14.sp,
+                                          showWeekly
+                                              ? fontColor.withOpacity(0.7)
+                                              : bodyColor,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            SizedBox(height: 2.h),
-                            SizedBox(
-                              height: 80.h,
+
+                            // Leaderboard content
+                            Expanded(
                               child: SingleChildScrollView(
-                                child: Column(
-                                  children: [
-                                    SizedBox(
-                                      width: 90.w,
-                                      height: 35.h,
-                                      child: Row(
+                                  child: Column(children: [
+                                // Top 3 users visualization
+                                SizedBox(
+                                  width: 90.w,
+                                  height: 35.h,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      // Second place
+                                      Column(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
+                                            MainAxisAlignment.end,
                                         children: [
                                           Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
                                             children: [
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  Image.asset(
-                                                    'assets/images/avatar.png',
-                                                    width: 10.w,
-                                                  ),
-                                                  SizedBox(
-                                                    height: 0.5.h,
-                                                  ),
-                                                  setText(
-                                                      "userName",
-                                                      FontWeight.w600,
-                                                      13.sp,
-                                                      fontColor
-                                                          .withOpacity(0.7)),
-                                                ],
+                                              Image.asset(
+                                                'assets/images/avatar.png',
+                                                width: 10.w,
                                               ),
-                                              Container(
-                                                width: 15.w,
-                                                height: 15.h,
-                                                decoration: BoxDecoration(
-                                                    color: primaryPurple,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12)),
-                                              ),
-                                              SizedBox(
-                                                height: 0.5.h,
-                                              ),
+                                              SizedBox(height: 0.5.h),
                                               setText(
-                                                  "500 points",
-                                                  FontWeight.bold,
-                                                  13.sp,
-                                                  fontColor),
+                                                "userName",
+                                                FontWeight.w600,
+                                                13.sp,
+                                                fontColor.withOpacity(0.7),
+                                              ),
                                             ],
                                           ),
-                                          SizedBox(width: 5.w),
-                                          Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  Image.asset(
-                                                    'assets/images/avatar.png',
-                                                    width: 10.w,
-                                                  ),
-                                                  SizedBox(
-                                                    height: 0.5.h,
-                                                  ),
-                                                  setText(
-                                                      "userName",
-                                                      FontWeight.w600,
-                                                      13.sp,
-                                                      fontColor
-                                                          .withOpacity(0.7)),
-                                                ],
-                                              ),
-                                              Container(
-                                                width: 15.w,
-                                                height: 20.h,
-                                                decoration: BoxDecoration(
-                                                    color: primaryBlue,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12)),
-                                              ),
-                                              SizedBox(
-                                                height: 0.5.h,
-                                              ),
-                                              setText(
-                                                  "500 points",
-                                                  FontWeight.bold,
-                                                  13.sp,
-                                                  fontColor),
-                                            ],
+                                          Container(
+                                            width: 15.w,
+                                            height: 15.h,
+                                            decoration: BoxDecoration(
+                                              color: primaryPurple,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
                                           ),
-                                          SizedBox(width: 5.w),
-                                          Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  Image.asset(
-                                                    'assets/images/avatar.png',
-                                                    width: 10.w,
-                                                  ),
-                                                  SizedBox(
-                                                    height: 0.5.h,
-                                                  ),
-                                                  setText(
-                                                      "userName",
-                                                      FontWeight.w600,
-                                                      13.sp,
-                                                      fontColor
-                                                          .withOpacity(0.7)),
-                                                ],
-                                              ),
-                                              Container(
-                                                width: 15.w,
-                                                height: 10.h,
-                                                decoration: BoxDecoration(
-                                                    color: primaryPurple,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12)),
-                                              ),
-                                              SizedBox(
-                                                height: 0.5.h,
-                                              ),
-                                              setText(
-                                                  "500 points",
-                                                  FontWeight.bold,
-                                                  13.sp,
-                                                  fontColor),
-                                            ],
+                                          SizedBox(height: 0.5.h),
+                                          setText(
+                                            "500 points",
+                                            FontWeight.bold,
+                                            13.sp,
+                                            fontColor,
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    SizedBox(height: 4.h),
-                                    SizedBox(
-                                      height: 41.h,
-                                      child: Expanded(
-                                        child: ListView.builder(
-                                            padding: EdgeInsets.only(
-                                                bottom: 4.h, top: 2.h),
-                                            itemCount: users.length,
-                                            itemBuilder: (context, index) {
-                                              return Padding(
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 4.w),
-                                                  child: Userpointscontainer(
-                                                    user: users[index],
-                                                    index: index + 1,
-                                                  ));
-                                            }),
+
+                                      SizedBox(width: 5.w),
+
+                                      // First place
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              Image.asset(
+                                                'assets/images/avatar.png',
+                                                width: 10.w,
+                                              ),
+                                              SizedBox(height: 0.5.h),
+                                              setText(
+                                                "userName",
+                                                FontWeight.w600,
+                                                13.sp,
+                                                fontColor.withOpacity(0.7),
+                                              ),
+                                            ],
+                                          ),
+                                          Container(
+                                            width: 15.w,
+                                            height: 20.h,
+                                            decoration: BoxDecoration(
+                                              color: primaryBlue,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          SizedBox(height: 0.5.h),
+                                          setText(
+                                            "500 points",
+                                            FontWeight.bold,
+                                            13.sp,
+                                            fontColor,
+                                          ),
+                                        ],
                                       ),
-                                    )
-                                  ],
+
+                                      SizedBox(width: 5.w),
+
+                                      // Third place
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              Image.asset(
+                                                'assets/images/avatar.png',
+                                                width: 10.w,
+                                              ),
+                                              SizedBox(height: 0.5.h),
+                                              setText(
+                                                "userName",
+                                                FontWeight.w600,
+                                                13.sp,
+                                                fontColor.withOpacity(0.7),
+                                              ),
+                                            ],
+                                          ),
+                                          Container(
+                                            width: 15.w,
+                                            height: 10.h,
+                                            decoration: BoxDecoration(
+                                              color: primaryPurple,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          SizedBox(height: 0.5.h),
+                                          setText(
+                                            "500 points",
+                                            FontWeight.bold,
+                                            13.sp,
+                                            fontColor,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
+
+                                SizedBox(height: 4.h),
+
+                                // List of other users
+                                for (int i = 0; i < users.length; i++)
+                                  Userpointscontainer(
+                                    user: users[i],
+                                    index: i + 1,
+                                  ),
+                              ])),
                             ),
-                          ])
-                    ]),
-                  ).fadeIn(duration: 400.ms)
-          ])),
-    );
+                          ],
+                        ),
+                      ).fadeIn(duration: 400.ms),
+              ],
+            ),
+          ),
+        ));
   }
 }

@@ -241,7 +241,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                 i < lockedChapters.length;
                                                 i++)
                                               Container(
-                                                padding: EdgeInsets.all(16),
+                                                // padding: EdgeInsets.all(16),
                                                 margin:
                                                     EdgeInsets.only(right: 2.h),
                                                 width: 70.w,
@@ -284,7 +284,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                                                     children: [
                                                       Image.asset(
                                                         'assets/images/chapters/${lockedChapters[i].name.toLowerCase()}/${lockedChapters[i].name.toLowerCase()}1.png',
-                                                        height: 15.h,
+                                                        height: 14.h,
                                                       ),
                                                       // SizedBox(height: 1.h),
                                                       setText(
@@ -797,7 +797,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                 ),
                 insetPadding: EdgeInsets.all(5.w),
                 backgroundColor: bodyColor,
-                content: Container(
+                content: SizedBox(
                   height: 47.h,
                   width: double.maxFinite,
                   child: Column(
@@ -1020,7 +1020,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                 ),
                 insetPadding: EdgeInsets.all(5.w),
                 backgroundColor: bodyColor,
-                content: Container(
+                content: SizedBox(
                   height: 42.h,
                   width: double.maxFinite,
                   child: Column(
@@ -1046,8 +1046,6 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(16)),
                         child: TextButton(
                           onPressed: () {
-                            chapterUnlockedModal(chapter);
-
                             if (user.points < 1500) return;
 
                             playSound("audio/pop.MP3");
@@ -1058,6 +1056,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                             user.addPoints(-1500);
                             getLockedChapters();
                             Navigator.pop(context);
+                            chapterUnlockedModal(chapter);
                           },
                           style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.zero,
@@ -1102,7 +1101,7 @@ class _ShopState extends State<Shop> with SingleTickerProviderStateMixin {
                 ),
                 insetPadding: EdgeInsets.all(5.w),
                 backgroundColor: bodyColor,
-                content: Container(
+                content: SizedBox(
                   height: 40.h,
                   width: double.maxFinite,
                   child: Column(

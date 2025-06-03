@@ -51,7 +51,7 @@ class _ChaptermenucontainerState extends State<Chaptermenucontainer> {
   Widget build(BuildContext context) {
     return Container(
       width: 90.w,
-      height: 23.h,
+      constraints: BoxConstraints(minHeight: 23.h),
       margin: EdgeInsets.only(bottom: 3.h),
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:funlish_app/components/appButton.dart';
 import 'package:funlish_app/components/modals/alertModal.dart';
 import 'package:funlish_app/components/modals/successModal.dart';
 import 'package:funlish_app/utility/global.dart';
@@ -88,8 +89,17 @@ class _CreatesessionState extends State<Createsession> {
                           LoadingAnimationWidget.fallingDot(
                               color: widget.color, size: 18.w),
                           SizedBox(height: 1.h),
-                          setText("Generating session id...", FontWeight.w600,
-                              16.sp, fontColor)
+                          setText("Generating session key...", FontWeight.w600,
+                              16.sp, fontColor),
+                          SizedBox(height: 2.h),
+                          AppButton(
+                              function: () {
+                                Navigator.pop(context);
+                              },
+                              height: 6.h,
+                              width: 40.w,
+                              color: widget.color,
+                              text: "Cancel")
                         ],
                       )
                     : Animate(

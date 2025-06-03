@@ -31,6 +31,7 @@ class _SettingsState extends State<Settings> {
     slides[4] = preferences.getBool("isInGameSounds") == true ? offsetX : 0.3;
     slides[5] =
         preferences.getBool("isShowUserInterests") == true ? offsetX : 0.3;
+    slides[6] = preferences.getBool("isSaveChat") == true ? offsetX : 0.3;
   }
 
   Widget build(BuildContext context) {
@@ -119,6 +120,11 @@ class _SettingsState extends State<Settings> {
                               Icons.interests_rounded, () {
                             preferences.setBool("isShowUserInterests",
                                 !preferences.getBool("isShowUserInterests")!);
+                          }),
+                          optionContainer(6, "Save my chat with the chatbot",
+                              Icons.save_rounded, () {
+                            preferences.setBool("isSaveChat",
+                                !preferences.getBool("isSaveChat")!);
                           }),
                         ]))))
               ])

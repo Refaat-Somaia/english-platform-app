@@ -54,7 +54,9 @@ class _CountdownscreenState extends State<Countdownscreen> {
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: colors.elementAt(index).withOpacity(0.15)),
+                              color: index % 2 == 0
+                                  ? primaryPurple.withOpacity(0.15)
+                                  : primaryBlue.withOpacity(0.15)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [

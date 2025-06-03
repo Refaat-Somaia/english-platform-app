@@ -49,6 +49,7 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
         preferences.setStringList("userChapters", ["1", "4", "5", "6"]);
         preferences.setBool("isInGameSounds", true);
         preferences.setBool("isShowUserInterests", true);
+        preferences.setBool("isSaveChat", false);
       } else if (preferences.getBool("isDarkMode") == true) {
         bodyColor = Color.fromARGB(255, 23, 16, 39);
         fontColor = Color(0xffF9F7FF);

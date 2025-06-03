@@ -8,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:funlish_app/body.dart';
 import 'package:funlish_app/components/avatar.dart';
 import 'package:funlish_app/components/modals/giftModal.dart';
+import 'package:funlish_app/mainPages/chatbot.dart';
 import 'package:funlish_app/mainPages/flashCards.dart';
 import 'package:funlish_app/mainPages/games/gameIntro.dart';
 import 'package:funlish_app/mainPages/menu/account.dart';
@@ -776,8 +777,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             ),
                           );
                         }),
-                        NavButton("Chatbot", FontAwesomeIcons.robot,
-                            primaryPurple, () {}),
+                        NavButton(
+                            "Chatbot", FontAwesomeIcons.robot, primaryPurple,
+                            () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (BuildContext context) => ChatbotPage(),
+                            ),
+                          );
+                        }),
                         NavButton(
                             "Store", FontAwesomeIcons.store, primaryPurple, () {
                           Navigator.push(
